@@ -87,7 +87,7 @@ function requestError(action: string, error: unknown): Error {
 
 /** Read the complete show using the signed-in web client's existing server and credentials. */
 export class TvEpisodeSource {
-    async load(itemId: string): Promise<TvEpisodeList> {
+    async load(itemId: string, playingItem?: BaseItemDto): Promise<TvEpisodeList> {
         if (!itemId) throw new Error('No playing episode was found. Start an episode and try again.');
         if (typeof ApiClient === 'undefined' || !ApiClient.getCurrentUserId()) {
             throw new Error('Sign in to Jellyfin before opening the episode browser.');
@@ -95,7 +95,7 @@ export class TvEpisodeSource {
         const userId = ApiClient.getCurrentUserId();
         let current: EpisodeDto;
         try {
-            current = await ApiClient.getItem(userId, itemId);
+            current = playingItem ?? await ApiClient.getItem(userId, itemId);
         } catch (error) {
             throw requestError('load the playing episode', error);
         }

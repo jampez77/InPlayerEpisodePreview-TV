@@ -4,24 +4,26 @@
 
 # In Player Episode Preview — TV Edition
 
-Browse every episode of a show without leaving the Jellyfin player. Open a remote-friendly panel, move between episodes and seasons, and keep your place in the video.
+Browse episodes, discover similar films, and switch live TV channels without leaving the Jellyfin player. Open a remote-friendly panel, explore what to watch next, and keep your place in the video.
 
 Inspired by and based on [Namo2's InPlayerEpisodePreview](https://github.com/Namo2/InPlayerEpisodePreview), this independent fork adds a TV interface while retaining the original desktop and mobile preview. It is maintained separately from the upstream project and is not an official upstream release.
 
-[Download the latest release](https://github.com/jampez77/InPlayerEpisodePreview-TV/releases/latest) · [Report an issue](https://github.com/jampez77/InPlayerEpisodePreview-TV/issues) · [Original project](https://github.com/Namo2/InPlayerEpisodePreview)
+[Try the interactive demo](https://jampez77.github.io/InPlayerEpisodePreview-TV/demo/index.html#/video) · [Download the latest release](https://github.com/jampez77/InPlayerEpisodePreview-TV/releases/latest) · [Report an issue](https://github.com/jampez77/InPlayerEpisodePreview-TV/issues) · [Original project](https://github.com/Namo2/InPlayerEpisodePreview)
 
 ![TV episode browser showing fictional demo content](Images/tv-preview.png)
 
-*TV layout. All screenshots use fictional shows, episodes, and local demo artwork.*
+*TV layout. All screenshots use fictional content and local demo artwork.*
 
 ## Browse with your remote
 
 | Control | Action |
 | --- | --- |
-| **Down** | Open the episode browser on the playing episode. |
-| **Left / Right** | Browse previous / next episodes, moving across seasons automatically. |
+| **Down** | Open the browser on the playing episode, film, or channel. |
+| **Left / Right** | Browse episodes, similar films, or live TV channels. |
 | **Up**, **Back**, or **Escape** | Close the browser and return to the player. |
-| **OK / Enter** | Play or resume the selected episode. Selecting the playing episode returns to it. |
+| **OK / Enter** | Play or resume the selection, or tune to the selected channel. Selecting the playing item returns to it. |
+
+### Episodes
 
 Each selection shows the series, season number and name, episode number and title, description, thumbnail, watch progress, and neighboring episodes. Generic season names such as “Series 1” or “Chapter 1” are shown once as “Season 1”; descriptive season names are preserved. Browsing leaves playback running, and the existing spoiler-blur settings apply.
 
@@ -31,7 +33,25 @@ Seasons form one continuous list. Moving past the final episode wraps to the fir
 
 *Whole-show wrapping in the fictional demo.*
 
-TV mode follows Jellyfin's **Display → Layout → TV** setting. The player button is hidden in TV mode; desktop and mobile layouts keep the original **Episode Preview** button and popup.
+### Movies
+
+Open the panel during a film to see the current film followed by up to 30 similar films from your Jellyfin library. Recommendations come from Jellyfin's similar-items API. Left and Right browse the list, wrapping at either end; a film with no recommendations remains available on its own.
+
+Each film shows its title, description, artwork, and available year, runtime, and playback progress. Browsing keeps the current film playing until you select another with **OK / Enter**.
+
+![Similar films in the TV browser](Images/movie-preview.png)
+
+### Live TV
+
+Open the panel during live TV to browse the channels available to your Jellyfin account. Each selection identifies the channel and shows its current programme, description, and artwork when supplied by the server. Left and Right wrap through the channel list; **OK / Enter** tunes to the selected channel. Browsing alone does not change the channel.
+
+Live TV requires channels already configured and working in Jellyfin. Programme information depends on your guide data; the channel name remains visible when programme details are unavailable.
+
+![Live TV channel browser with current programme details](Images/live-tv-preview.png)
+
+### Desktop and mobile
+
+TV mode follows Jellyfin's **Display → Layout → TV** setting. The player button is hidden in TV mode; desktop and mobile layouts keep the original **Episode Preview** button and episode popup. Movie and live TV browsing are available in TV mode.
 
 ![Desktop episode preview with fictional demo episodes](Images/desktop-preview.png)
 
@@ -59,7 +79,7 @@ Add the following repository URL in the Jellyfin dashboard's plugin repository s
 https://raw.githubusercontent.com/jampez77/InPlayerEpisodePreview-TV/main/manifest.json
 ```
 
-Open the plugin catalogue and install **InPlayerEpisodePreview** from the TV Edition repository (owner **jampez77**, with the new cyan episode-card logo), then restart Jellyfin. Reload the web client, select the TV layout, start an episode, and press **Down**.
+Open the plugin catalogue and install **InPlayerEpisodePreview** from the TV Edition repository (owner **jampez77**, with the new cyan episode-card logo), then restart Jellyfin. Reload the web client, select the TV layout, start an episode, film, or live TV channel, and press **Down**.
 
 **Replacing the original plugin:** this fork keeps the original plugin ID and settings. Install it as a replacement, not alongside a second copy. Use the TV Edition repository as the update source for this plugin and remove the original InPlayerEpisodePreview repository from your repository list to avoid competing updates. Back up your existing plugin folder before switching.
 
@@ -70,7 +90,7 @@ The inherited integration supports the [File Transformation plugin](https://gith
 1. Download the ZIP matching your server from [Releases](https://github.com/jampez77/InPlayerEpisodePreview-TV/releases/latest).
 2. Stop Jellyfin and back up any existing InPlayerEpisodePreview plugin folder.
 3. Extract `Namo.Plugin.InPlayerEpisodePreview.dll` into a folder under Jellyfin's configured `plugins` directory. Replace the existing plugin DLL if installed; do not leave two copies.
-4. Restart Jellyfin and reload the web client. Choose the TV layout, start an episode, and press **Down**.
+4. Restart Jellyfin and reload the web client. Choose the TV layout, start an episode, film, or live TV channel, and press **Down**.
 
 The release ZIPs contain the plugin DLL. The assembly name remains unchanged for compatibility with the original plugin.
 
@@ -98,9 +118,22 @@ bash scripts/package-plugin.sh 12.0.0
 
 `Web/InPlayerPreview.js` is the generated production bundle embedded in the DLL. Run `npm run build` from the project directory after editing TypeScript or CSS. For a development bundle with a separate source map, run `npx webpack --mode development`.
 
-Tests cover episode pagination and ordering, season transitions, whole-show wrapping, remote and keyboard commands, playback errors, dialog and focus handling, asynchronous cancellation, and the desktop button.
+Tests cover episode pagination and ordering, season transitions, whole-show wrapping, movies and similar recommendations, live TV channels, remote and keyboard commands, playback errors, dialog and focus handling, asynchronous cancellation, and the desktop button.
 
-## Try the UI locally
+## Try the demo
+
+No installation is needed for the [interactive browser demo](https://jampez77.github.io/InPlayerEpisodePreview-TV/demo/index.html#/video):
+
+- [Episodes](https://jampez77.github.io/InPlayerEpisodePreview-TV/demo/index.html#/video) — browse seasons and wrap around the show.
+- [Movies](https://jampez77.github.io/InPlayerEpisodePreview-TV/demo/index.html?media=movie#/video) — explore the current film and similar films.
+- [Live TV](https://jampez77.github.io/InPlayerEpisodePreview-TV/demo/index.html?media=live-tv#/video) — browse channels and their current programmes.
+- [Desktop](https://jampez77.github.io/InPlayerEpisodePreview-TV/demo/index.html?layout=desktop#/video) — use the original episode preview button.
+
+Press **Down** to open the TV panel, **Left / Right** to browse, **Up** to close, and **Enter** to select. The controls at the top switch media types and layouts.
+
+The demo uses fictional content and local artwork. It runs the actual browser bundle against a simulated API; it does not connect to a Jellyfin server, stream live TV, or play real video. GitHub Pages publishes the demo from `main` whenever its source or browser bundle changes.
+
+### Run locally
 
 From the cloned repository:
 
@@ -111,14 +144,12 @@ npm run build
 npm run demo
 ```
 
-Open the [TV demo](http://127.0.0.1:4173/demo/index.html#/video) and press **Down**, or open the [desktop demo](http://127.0.0.1:4173/demo/index.html?layout=desktop#/video) and click **Episode Preview**. The controls at the top also switch layouts.
-
-The demo uses fictional content and local artwork. It runs the actual browser bundle against a simulated API; it does not connect to a Jellyfin server or play real video. See the [demo guide](Namo.Plugin.InPlayerEpisodePreview/demo/README.md) for test scenarios.
+Open the [local demo](http://127.0.0.1:4173/demo/index.html#/video). Use `?media=movie`, `?media=live-tv`, or `?layout=desktop` before `#/video` to start in a particular mode. See the [demo guide](Namo.Plugin.InPlayerEpisodePreview/demo/README.md) for test scenarios.
 
 ## Credits and license
 
 The original **InPlayerEpisodePreview** plugin was created by [Namo2 and contributors](https://github.com/Namo2/InPlayerEpisodePreview). Their server integration, settings, episode data handling, and desktop preview provide the foundation for this project. This fork began from upstream commit [`015c57b`](https://github.com/Namo2/InPlayerEpisodePreview/commit/015c57b).
 
-TV Edition adds remote navigation, a TV episode panel, continuous browsing across seasons, whole-show wrapping, and its accompanying demo and regression tests. The TV Edition logo and screenshots identify this fork; the original project's identity and authorship remain credited.
+TV Edition adds remote navigation, a TV media panel, continuous browsing across seasons, whole-show wrapping, similar-film browsing, live TV channel navigation, and its accompanying demo and regression tests. The TV Edition logo and screenshots identify this fork; the original project's identity and authorship remain credited.
 
 Distributed under the original [MIT license](LICENSE.md). The upstream license and copyright notice are preserved.

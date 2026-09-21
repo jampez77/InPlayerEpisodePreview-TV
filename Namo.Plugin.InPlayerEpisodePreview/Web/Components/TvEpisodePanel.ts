@@ -1,4 +1,5 @@
 import {TvEpisode} from "../Services/TvEpisodeSource";
+import type {TvMediaItem} from "../Services/TvMediaSource";
 import "../Styles/TvEpisodePanel.css";
 
 type PanelActions = {
@@ -9,8 +10,8 @@ type PanelActions = {
 };
 
 type EpisodeContext = {
-    previous: TvEpisode;
-    next: TvEpisode;
+    previous: TvMediaItem;
+    next: TvMediaItem;
     index: number;
     total: number;
     isPlaying: boolean;
@@ -42,14 +43,30 @@ function seasonLabel(episode: TvEpisode): string {
         ? [number, name].filter(Boolean).join(" · ") : number || name || "Season";
 }
 
+function positionLabel(item: TvMediaItem): string {
+    if (item.kind === "movie") return ["Film", item.productionYear].filter(Boolean).join(" · ");
+    if (item.kind === "channel") return item.channelNumber ? `Channel ${item.channelNumber} · Live TV` : "Live TV";
+    return `${seasonLabel(item)} · ${episodeNumber(item)}`;
+}
+
+function programmeTime(item: TvMediaItem): string {
+    const start = new Date(item.programStart || "");
+    const end = new Date(item.programEnd || "");
+    if (!Number.isFinite(start.getTime()) || !Number.isFinite(end.getTime())) return "Live now";
+    const format = (date: Date) => date.toLocaleTimeString([], {hour: "2-digit", minute: "2-digit"});
+    return `${format(start)}–${format(end)}`;
+}
+
 /** TV presentation only. Playback, remote keys and focus trapping belong to the controller. */
 export class TvEpisodePanel {
     readonly element: HTMLElement;
     private readonly series = node("div", "ipep-tv-series");
+    private readonly eyebrow = node("span", "ipep-tv-eyebrow", "BROWSE");
     private readonly count = node("span", "ipep-tv-count");
     private readonly season = node("div", "ipep-tv-season");
     private readonly title = node("h2", "ipep-tv-title");
     private readonly metadata = node("div", "ipep-tv-metadata");
+    private readonly programme = node("div", "ipep-tv-programme");
     private readonly playing = node("span", "ipep-tv-playing", "Currently playing");
     private readonly description = node("p", "ipep-tv-description");
     private readonly descriptionFrame = node("div", "ipep-tv-description-frame");
@@ -57,6 +74,7 @@ export class TvEpisodePanel {
     private readonly image = node("img", "ipep-tv-image");
     private readonly imageFrame = node("div", "ipep-tv-image-frame");
     private readonly imageFallback = node("div", "ipep-tv-image-fallback");
+    private readonly imageFallbackText = node("span", "", "No image available");
     private readonly progress = node("div", "ipep-tv-progress");
     private readonly progressFill = node("div", "ipep-tv-progress-fill");
     private readonly details = node("div", "ipep-tv-details");
@@ -75,7 +93,7 @@ export class TvEpisodePanel {
     private readonly playLabel = node("span", "ipep-tv-play-label", "Play episode");
     private readonly actionsRow = node("div", "ipep-tv-actions");
     private state: "loading" | "error" | "episode" = "loading";
-    private selected: TvEpisode | null = null;
+    private selected: TvMediaItem | null = null;
     private isPlaying = false;
     private busy = false;
 
@@ -84,7 +102,7 @@ export class TvEpisodePanel {
         this.element.id = "tvEpisodePreview";
         this.element.setAttribute("role", "dialog");
         this.element.setAttribute("aria-modal", "true");
-        this.element.setAttribute("aria-label", "Browse episodes");
+        this.element.setAttribute("aria-label", "Browse media");
         this.element.tabIndex = -1;
 
         this.previous = this.button("ipep-tv-neighbor ipep-tv-previous", "Previous episode", actions.previous);
@@ -95,7 +113,7 @@ export class TvEpisodePanel {
         const shell = node("div", "ipep-tv-shell");
         const header = node("header", "ipep-tv-header");
         const heading = node("div", "ipep-tv-heading");
-        heading.append(node("span", "ipep-tv-eyebrow", "EPISODES"), this.series);
+        heading.append(this.eyebrow, this.series);
         this.close.append(node("span", "", "Close"));
         header.append(heading, this.count, this.close);
 
@@ -109,7 +127,7 @@ export class TvEpisodePanel {
             this.image.hidden = false;
             this.imageFallback.hidden = true;
         });
-        this.imageFallback.append(this.icon("▷"), node("span", "", "No episode image"));
+        this.imageFallback.append(this.icon("▷"), this.imageFallbackText);
         this.progress.append(this.progressFill);
         this.progress.setAttribute("role", "progressbar");
         this.progress.setAttribute("aria-label", "Episode watch progress");
@@ -121,7 +139,7 @@ export class TvEpisodePanel {
         this.descriptionFrame.append(this.description, this.spoilerNotice);
         this.play.append(this.icon("▶"), this.playLabel);
         this.actionsRow.append(this.play);
-        this.details.append(this.season, this.title, this.metadata, this.descriptionFrame, this.actionsRow);
+        this.details.append(this.season, this.title, this.programme, this.metadata, this.descriptionFrame, this.actionsRow);
         this.content.append(this.imageFrame, this.details);
 
         this.message.append(this.messageTitle, this.messageText);
@@ -174,18 +192,20 @@ export class TvEpisodePanel {
         this.selected = null;
         this.element.setAttribute("aria-busy", "true");
         this.element.dataset.state = "loading";
-        this.series.textContent = "Browse this show";
+        this.series.textContent = "Now playing";
+        this.element.setAttribute("aria-label", "Browse media");
+        this.eyebrow.textContent = "BROWSE";
         this.count.textContent = "";
         this.content.hidden = true;
         this.message.hidden = false;
-        this.messageTitle.textContent = "Loading episodes…";
-        this.messageText.textContent = "Getting every season ready to browse.";
+        this.messageTitle.textContent = "Loading preview…";
+        this.messageText.textContent = "Getting your media ready to browse.";
         this.previous.hidden = true;
         this.next.hidden = true;
         this.play.hidden = true;
         this.actionsRow.hidden = true;
         this.announcement.textContent = "";
-        this.live.textContent = "Loading episodes";
+        this.live.textContent = "Loading preview";
     }
 
     showError(message: string): void {
@@ -195,7 +215,7 @@ export class TvEpisodePanel {
         this.element.dataset.state = "error";
         this.content.hidden = true;
         this.message.hidden = false;
-        this.messageTitle.textContent = "Couldn’t load episodes";
+        this.messageTitle.textContent = "Couldn’t load preview";
         this.messageText.textContent = message || "Please try again.";
         this.previous.hidden = true;
         this.next.hidden = true;
@@ -203,28 +223,40 @@ export class TvEpisodePanel {
         this.actionsRow.hidden = false;
         this.play.disabled = false;
         this.playLabel.textContent = "Try again";
-        this.play.setAttribute("aria-label", "Try loading episodes again");
+        this.play.setAttribute("aria-label", "Try loading preview again");
         this.message.append(this.actionsRow);
         this.announcement.textContent = "";
         this.live.textContent = `${this.messageTitle.textContent}. ${this.messageText.textContent}`;
     }
 
-    showEpisode(episode: TvEpisode, context: EpisodeContext): void {
+    showEpisode(episode: TvMediaItem, context: EpisodeContext): void {
         this.state = "episode";
         this.selected = episode;
         this.busy = false;
         this.isPlaying = context.isPlaying;
         this.element.dataset.state = "episode";
+        this.element.dataset.kind = episode.kind;
         this.element.setAttribute("aria-busy", "false");
         this.content.hidden = false;
         this.message.hidden = true;
         this.details.append(this.actionsRow);
         this.actionsRow.hidden = false;
-        this.series.textContent = episode.seriesName || "Browse this show";
-        this.count.textContent = `${context.index + 1} / ${context.total} episodes`;
-        this.season.textContent = `${seasonLabel(episode)} · ${episodeNumber(episode)}`;
-        this.title.textContent = episode.name || "Untitled episode";
-        this.description.textContent = episode.description || "No description available for this episode.";
+        const isChannel = episode.kind === "channel";
+        const isMovie = episode.kind === "movie";
+        const singular = isChannel ? "channel" : isMovie ? "film" : "episode";
+        const plural = `${singular}s`;
+        this.element.setAttribute("aria-label", isChannel ? "Browse live TV" : isMovie ? "Browse similar films" : "Browse episodes");
+        this.eyebrow.textContent = isChannel ? "LIVE TV" : isMovie ? "FILMS" : "EPISODES";
+        this.series.textContent = isChannel ? "Channels" : isMovie ? `Similar to ${episode.seriesName}` : episode.seriesName || "Browse this show";
+        this.count.textContent = `${context.index + 1} / ${context.total} ${plural}`;
+        this.season.textContent = positionLabel(episode);
+        this.title.textContent = episode.name || `Untitled ${singular}`;
+        this.programme.hidden = !isChannel;
+        this.programme.textContent = episode.programName ? `Now · ${episode.programName}` : "Programme information unavailable";
+        this.description.textContent = episode.description || (isChannel ? "No programme description available for this channel." : `No description available for this ${singular}.`);
+        this.image.alt = isChannel ? "Channel or programme image" : isMovie ? "Film artwork" : "Episode thumbnail";
+        this.imageFallbackText.textContent = `No ${singular} image`;
+        this.close.setAttribute("aria-label", `Close ${isChannel ? "channel" : isMovie ? "film" : "episode"} browser`);
         const hideDescription = Boolean(context.blurDescription);
         this.descriptionFrame.classList.toggle("ipep-tv-description-hidden", hideDescription);
         this.description.setAttribute("aria-hidden", String(hideDescription));
@@ -243,26 +275,30 @@ export class TvEpisodePanel {
         }
         this.playing.hidden = !context.isPlaying;
         const minutes = Math.round(episode.runtimeTicks / 600000000);
-        this.metadata.textContent = [
+        this.metadata.textContent = isChannel ? (episode.programName ? programmeTime(episode) : "Live TV") : [
+            isMovie ? episode.officialRating || "" : "",
             minutes > 0 ? `${minutes} min` : "",
+            isMovie ? (episode.genres || []).slice(0, 2).join(" / ") : "",
             episode.played ? "Watched" : episode.playbackPositionTicks > 0 ? "In progress" : "Unwatched"
         ].filter(Boolean).join(" · ");
-        const percent = episode.runtimeTicks > 0
+        const percent = !isChannel && episode.runtimeTicks > 0
             ? Math.min(100, Math.max(0, 100 * episode.playbackPositionTicks / episode.runtimeTicks)) : 0;
         this.progress.hidden = percent <= 0;
+        this.progress.setAttribute("aria-label", isMovie ? "Film watch progress" : "Episode watch progress");
         this.progressFill.style.width = `${percent}%`;
         this.progress.setAttribute("aria-valuenow", String(Math.round(percent)));
         this.previous.hidden = context.total <= 1;
         this.next.hidden = context.total <= 1;
         this.previousLabel.textContent = this.neighborLabel(context.previous);
         this.nextLabel.textContent = this.neighborLabel(context.next);
-        this.previous.setAttribute("aria-label", `Previous: ${seasonLabel(context.previous)}, ${episodeNumber(context.previous)}, ${context.previous.name}${context.index === 0 ? ". Wraps to the end of the show" : ""}`);
-        this.next.setAttribute("aria-label", `Next: ${seasonLabel(context.next)}, ${episodeNumber(context.next)}, ${context.next.name}${context.index === context.total - 1 ? ". Wraps to the start of the show" : ""}`);
-        const wrapHint = context.total <= 1 ? "The only episode in this show"
-            : context.index === 0 ? "First episode"
-                : context.index === context.total - 1 ? "Last episode" : "";
+        const collection = episode.kind === "episode" ? "show" : "list";
+        this.previous.setAttribute("aria-label", `Previous: ${positionLabel(context.previous)}, ${context.previous.name}${context.index === 0 ? `. Wraps to the end of the ${collection}` : ""}`);
+        this.next.setAttribute("aria-label", `Next: ${positionLabel(context.next)}, ${context.next.name}${context.index === context.total - 1 ? `. Wraps to the start of the ${collection}` : ""}`);
+        const wrapHint = context.total <= 1 ? (isMovie ? "No similar films found" : isChannel ? "The only available channel" : "The only episode in this show")
+            : context.index === 0 ? (isMovie ? "Current film" : `First ${singular}`)
+                : context.index === context.total - 1 ? `Last ${singular}` : "";
         this.announcement.textContent = context.announcement || wrapHint;
-        this.live.textContent = [context.announcement, `${seasonLabel(episode)}, ${episodeNumber(episode)}: ${episode.name}.`, `${context.index + 1} of ${context.total} episodes.`, context.isPlaying ? "Currently playing." : ""].filter(Boolean).join(" ");
+        this.live.textContent = [context.announcement, `${positionLabel(episode)}: ${episode.name}.`, isChannel ? this.programme.textContent : "", `${context.index + 1} of ${context.total} ${plural}.`, context.isPlaying ? "Currently playing." : ""].filter(Boolean).join(" ");
         this.play.hidden = false;
         this.updatePlayButton();
     }
@@ -284,13 +320,18 @@ export class TvEpisodePanel {
         this.play.disabled = this.busy;
         this.previous.disabled = this.busy;
         this.next.disabled = this.busy;
-        const label = this.busy ? "Starting episode…" : this.state === "error" ? "Try again"
-            : this.isPlaying ? "Return to episode" : this.selected?.playbackPositionTicks > 0 ? "Resume episode" : "Play episode";
+        const kind = this.selected?.kind;
+        const noun = kind === "channel" ? "channel" : kind === "movie" ? "film" : "episode";
+        const label = this.busy ? (kind === "channel" ? "Tuning channel…" : `Starting ${noun}…`) : this.state === "error" ? "Try again"
+            : this.isPlaying ? `Return to ${noun}` : kind === "channel" ? "Watch channel"
+                : this.selected?.playbackPositionTicks > 0 && !this.selected?.played ? `Resume ${noun}` : `Play ${noun}`;
         this.playLabel.textContent = label;
         this.play.setAttribute("aria-label", label);
     }
 
-    private neighborLabel(episode: TvEpisode): string {
+    private neighborLabel(episode: TvMediaItem): string {
+        if (episode.kind === "movie") return episode.name;
+        if (episode.kind === "channel") return [episode.channelNumber, episode.name].filter(Boolean).join(" · ");
         const season = episode.seasonNumber === null ? episode.seasonName : `S${episode.seasonNumber}`;
         const number = episode.episodeNumber === null ? "" : `E${episode.episodeNumber}`;
         return `${[season, number].filter(Boolean).join(" · ")} — ${episode.name}`;

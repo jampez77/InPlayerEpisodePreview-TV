@@ -1,0 +1,73 @@
+name: Publish interactive demo
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - Namo.Plugin.InPlayerEpisodePreview/Web/**
+      - Namo.Plugin.InPlayerEpisodePreview/demo/**
+      - Namo.Plugin.InPlayerEpisodePreview/package*.json
+      - Namo.Plugin.InPlayerEpisodePreview/tsconfig.json
+      - Namo.Plugin.InPlayerEpisodePreview/webpack.config.js
+      - .github/workflows/demo-pages.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: Namo.Plugin.InPlayerEpisodePreview/package-lock.json
+      - run: npm ci
+        working-directory: Namo.Plugin.InPlayerEpisodePreview
+      - run: npm run build
+        working-directory: Namo.Plugin.InPlayerEpisodePreview
+      - name: Prepare static demo
+        run: |
+          mkdir -p _site/demo _site/Web
+          cp Namo.Plugin.InPlayerEpisodePreview/demo/*.html _site/demo/
+          cp Namo.Plugin.InPlayerEpisodePreview/demo/*.css _site/demo/
+          cp Namo.Plugin.InPlayerEpisodePreview/demo/*.js _site/demo/
+          cp Namo.Plugin.InPlayerEpisodePreview/demo/*.svg _site/demo/
+          cp Namo.Plugin.InPlayerEpisodePreview/Web/InPlayerPreview.js _site/Web/
+          touch _site/.nojekyll
+          cat > _site/index.html <<'HTML'
+          <!doctype html>
+          <html lang="en">
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width,initial-scale=1">
+          <meta http-equiv="refresh" content="0;url=demo/index.html#/video">
+          <title>In Player Episode Preview — TV Edition demo</title>
+          <p><a href="demo/index.html#/video">Open the interactive demo</a></p>
+          </html>
+          HTML
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: _site
+          include-hidden-files: true
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/configure-pages@v6
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5

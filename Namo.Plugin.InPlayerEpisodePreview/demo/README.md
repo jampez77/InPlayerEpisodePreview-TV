@@ -1,6 +1,8 @@
 # TV Edition offline demo
 
-Try the TV and desktop interfaces without a Jellyfin server. The demo runs the actual built `Web/InPlayerPreview.js` against a simulated Jellyfin API. Show names, episode descriptions, and artwork are fictional; playback is simulated.
+Try the TV and desktop interfaces without a Jellyfin server. The demo runs the actual built `Web/InPlayerPreview.js` against a simulated Jellyfin API. Shows, films, channels, programme descriptions, and artwork are fictional; playback is simulated. No account or server connection is needed.
+
+**[Open the live demo](https://jampez77.github.io/InPlayerEpisodePreview-TV/demo/index.html#/video)** · [Movies](https://jampez77.github.io/InPlayerEpisodePreview-TV/demo/index.html?media=movie#/video) · [Live TV](https://jampez77.github.io/InPlayerEpisodePreview-TV/demo/index.html?media=live-tv#/video) · [Desktop](https://jampez77.github.io/InPlayerEpisodePreview-TV/demo/index.html?layout=desktop#/video)
 
 This is part of [In Player Episode Preview — TV Edition](https://github.com/jampez77/InPlayerEpisodePreview-TV), an independent fork inspired by and based on [Namo2's original plugin](https://github.com/Namo2/InPlayerEpisodePreview).
 
@@ -14,11 +16,19 @@ npm run build
 npm run demo
 ```
 
-Open the [TV demo](http://127.0.0.1:4173/demo/index.html#/video). Press **Down** to open, **Left / Right** to browse across seasons, **Up** to close, and **Enter** to simulate playback. Moving beyond either end of the show wraps to the opposite end.
+Open the [TV demo](http://127.0.0.1:4173/demo/index.html#/video). Press **Down** to open, **Left / Right** to browse, **Up** to close, and **Enter** to simulate playback. Browsing leaves the playing item unchanged until you select a different item. Selecting the current item returns to playback.
 
-Open the [desktop demo](http://127.0.0.1:4173/demo/index.html?layout=desktop#/video) to use the original player button and popup. The controls at the top also switch layouts.
+Use the content buttons at the top, or open a mode directly:
 
-Rebuild with `npm run build` after changing plugin source. The demo listens only on `127.0.0.1` and loads its artwork locally.
+| Demo | What to try |
+| --- | --- |
+| [Episodes](http://127.0.0.1:4173/demo/index.html#/video) | Browse through both seasons, then wrap from the last episode to the first. |
+| [Movies](http://127.0.0.1:4173/demo/index.html?media=movie#/video) | Start on the playing film, browse two similar films, and resume **A Map of Silence**. The list wraps back to the current film. |
+| [Live TV](http://127.0.0.1:4173/demo/index.html?media=live-tv#/video) | Browse three numbered channels and their current programmes. **Field Notes** demonstrates missing guide data. Select **Watch channel** to simulate tuning. |
+
+Open the [desktop demo](http://127.0.0.1:4173/demo/index.html?layout=desktop#/video) to use the original episode player button and popup. Switching to **Desktop** selects the episode example. Selecting **Movies** or **Live TV** switches to the TV layout; the new film and channel browsers are TV features.
+
+Rebuild with `npm run build` after changing plugin source. The local server listens only on `127.0.0.1`. The public demo uses the same static files, with relative asset paths suitable for GitHub Pages project hosting. All artwork is included in the demo folder.
 
 ## Browser regression checks
 
@@ -27,7 +37,7 @@ npx playwright install chromium
 npm run test:browser
 ```
 
-The test command rebuilds the bundle, and Playwright starts the local demo server automatically. Tests cover remote commands, season and show boundaries, playback and loading failures, route cleanup, desktop behavior, other dialogs, missing metadata, and safe text rendering.
+The test command rebuilds the bundle, and Playwright starts the local demo server automatically. Tests cover remote commands, season and show boundaries, similar-film order and resume playback, channel navigation and explicit tuning, missing programme data, playback and loading failures, route cleanup, desktop behavior, other dialogs, missing metadata, and safe text rendering.
 
 These checks validate the simulated environment. They do not replace testing with a live Jellyfin server, client, and physical remote.
 
@@ -38,9 +48,11 @@ Add query parameters before `#/video`:
 | Parameter | Scenario |
 | --- | --- |
 | `?layout=desktop` | Start with the desktop layout. |
-| `?scenario=missing` | Show episodes with missing metadata. |
+| `?media=movie` | Start with the playing film and similar-film recommendations. |
+| `?media=live-tv` | Start with live channels and current programme information. |
+| `?scenario=missing` | Show the current episode, film, or channel with missing metadata; combine with a media parameter. |
 | `?scenario=unsafe` | Exercise safe rendering of text containing markup. |
 
-The fixture's `window.__demo` object also exposes `delayMs`, `failLoad`, and `failPlay` switches for loading and failure checks.
+The fixture's `window.__demo` object also exposes `episodes`, `seasons`, `movies`, `channels`, `setPlaying(id)`, `delayMs`, `failLoad`, and `failPlay` for metadata, loading, and playback checks. `playRequests` records simulated selections so tests can distinguish browsing from playing.
 
-For installation, compatibility, and upstream attribution, see the [project README](../../README.md).
+For installation, compatibility, and upstream attribution, see the [project README](https://github.com/jampez77/InPlayerEpisodePreview-TV#readme).

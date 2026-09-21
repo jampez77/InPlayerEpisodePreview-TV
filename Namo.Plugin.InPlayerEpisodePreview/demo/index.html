@@ -3,20 +3,23 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>Episode preview · Offline demo</title>
-    <link rel="stylesheet" href="/demo/demo.css">
-    <link rel="stylesheet" href="/demo/jellyfin-host.css">
+    <title>In Player Preview · Interactive demo</title>
+    <link rel="stylesheet" href="demo.css">
+    <link rel="stylesheet" href="jellyfin-host.css">
 </head>
 <body>
     <main class="demo-stage" data-type="video-osd">
         <div class="demo-atmosphere" aria-hidden="true"></div>
         <header class="demo-header">
             <div class="demo-brand"><span class="demo-mark" aria-hidden="true">◈</span> Jellyfin <span class="demo-label">OFFLINE DEMO</span></div>
-            <div class="demo-layout"><button id="demo-tv" type="button">TV</button><button id="demo-desktop" type="button">Desktop</button></div>
+            <div class="demo-switches">
+                <nav class="demo-layout demo-media" aria-label="Demo content"><button id="demo-episode" type="button">Episodes</button><button id="demo-movie" type="button">Movies</button><button id="demo-live-tv" type="button">Live TV</button></nav>
+                <div class="demo-layout" role="group" aria-label="Player layout"><button id="demo-tv" type="button">TV</button><button id="demo-desktop" type="button">Desktop</button></div>
+            </div>
         </header>
         <section class="demo-now-playing" aria-label="Demo video">
-            <p class="demo-eyebrow">NOW PLAYING · A FICTIONAL SERIES</p>
-            <h1>The long<br>way home<span>.</span></h1>
+            <p class="demo-eyebrow" id="demo-playing-type">NOW PLAYING · A FICTIONAL SERIES</p>
+            <h1 id="demo-playing-title">The long<br>way home<span>.</span></h1>
             <p id="demo-playing-name">Season 1 · Episode 2 · The Glass Station</p>
         </section>
         <div class="demo-instructions" id="demo-instructions"><kbd>↓</kbd><div>Browse this show<span>Open the episode preview with your remote or keyboard.</span></div></div>
@@ -31,7 +34,7 @@
         </footer>
         <div class="demo-toast" id="demo-toast" role="status" hidden></div>
     </main>
-    <script src="/demo/fixture.js"></script>
+    <script src="fixture.js"></script>
     <script src="../Web/InPlayerPreview.js"></script>
     <script>
         document.dispatchEvent(new CustomEvent('viewshow', {bubbles: true}));

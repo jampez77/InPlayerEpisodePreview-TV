@@ -157,6 +157,20 @@ body.ipep-tv-preview-open [data-type="video-osd"] .videoOsdTop {
     object-fit: cover;
 }
 
+#tvEpisodePreview[data-kind="movie"] .ipep-tv-image,
+#tvEpisodePreview[data-kind="channel"] .ipep-tv-image {
+    object-fit: contain;
+}
+
+#tvEpisodePreview .ipep-tv-programme {
+    margin: .35em 0;
+    font-size: .95em;
+    color: #e0e6f1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 #tvEpisodePreview .ipep-tv-thumbnail-hidden .ipep-tv-image {
     filter: blur(25px);
     transform: scale(1.12);

@@ -18,6 +18,30 @@
         {Id: 'season-1', Name: 'The Far Coast', IndexNumber: 1, Type: 'Season'},
         {Id: 'season-2', Name: 'Beyond the Signal', IndexNumber: 2, Type: 'Season'}
     ];
+    const movies = [
+        {Id: 'movie-1', Name: 'The Last Meridian', ProductionYear: 2025, Genres: ['Adventure', 'Drama'], Overview: 'When every compass in the city points toward the same forgotten observatory, a cartographer sets out to find the last line on a map her father never finished.'},
+        {Id: 'movie-2', Name: 'A Map of Silence', ProductionYear: 2024, Genres: ['Drama', 'Mystery'], Overview: 'A sound archivist follows a trail of empty recordings across a remote archipelago. What she discovers changes the way she hears the world around her.'},
+        {Id: 'movie-3', Name: 'Paper Satellites', ProductionYear: 2023, Genres: ['Science Fiction', 'Adventure'], Overview: 'Two friends build a receiver from discarded parts and hear a transmission from tomorrow. They have one summer night to decide what to do with it.'}
+    ].map((item, index) => ({
+        ...item, Type: 'Movie', MediaType: 'Video', LocationType: 'FileSystem', ServerId: 'demo-server',
+        RunTimeTicks: (108 + index * 6) * 600000000, OfficialRating: 'PG',
+        ImageTags: {Primary: 'demo-film'}, BackdropImageTags: ['demo-film'], PrimaryImageTag: 'demo-film',
+        UserData: {Played: false, IsFavorite: false, PlaybackPositionTicks: index === 1 ? 15000000000 : 0, PlayedPercentage: index === 1 ? 22 : 0}
+    }));
+    const programmeStart = new Date(Date.now() - 20 * 60000).toISOString();
+    const programmeEnd = new Date(Date.now() + 40 * 60000).toISOString();
+    const channels = [
+        {Id: 'channel-1', Name: 'North One', ChannelNumber: '1', CurrentProgram: {Id: 'programme-1', Name: 'Morning on the Coast', Overview: 'Meet the people keeping a small harbour moving, from the first fishing boat to the last delivery of the morning.', StartDate: programmeStart, EndDate: programmeEnd, ImageTags: {Primary: 'demo-channel'}}},
+        {Id: 'channel-2', Name: 'Frame Cinema', ChannelNumber: '2', CurrentProgram: {Id: 'programme-2', Name: 'The Midnight Express', Overview: 'A missed connection turns into an unforgettable journey when a young musician boards the last train across the mountains.', StartDate: programmeStart, EndDate: programmeEnd, ImageTags: {Primary: 'demo-channel'}}},
+        {Id: 'channel-3', Name: 'Field Notes', ChannelNumber: '12'}
+    ].map(item => ({
+        ...item, Type: 'TvChannel', MediaType: 'Video', ServerId: 'demo-server',
+        ImageTags: {Primary: 'demo-channel'}, PrimaryImageTag: 'demo-channel',
+        // Nonzero history intentionally exercises the live-channel zero-seek rule.
+        UserData: {Played: false, IsFavorite: false, PlaybackPositionTicks: 12000000000}
+    }));
+    const items = [...episodes, ...movies, ...channels];
+    const artworkUrl = id => new URL(id.startsWith('movie-') ? 'movie-artwork.svg' : /^(channel|programme)-/.test(id) ? 'channel-artwork.svg' : 'artwork.svg', location.href).href;
     const settings = {
         EnabledItemTypes: [28, 5, 13, 35], BlurDescription: false, BlurThumbnail: false,
         EpisodePageSize: 10, ShowWatchedCount: true, WatchCountDisplayMode: 0,
@@ -26,32 +50,74 @@
     };
     const clone = value => JSON.parse(JSON.stringify(value));
     const demo = window.__demo = {
-        episodes, seasons, settings, calls: [], playRequests: [], playerCommands: [],
+        episodes, seasons, movies, channels, settings, calls: [], playRequests: [], playerCommands: [],
+        media: 'episode', layout: 'tv',
         delayMs: 0, failPlay: false, failLoad: false, ready: false,
         async wait() {
             if (this.delayMs) await new Promise(resolve => setTimeout(resolve, this.delayMs));
-            if (this.failLoad) throw new Error('Synthetic episode load failure');
+            if (this.failLoad) throw new Error('Synthetic media load failure');
         },
         setPlaying(id) {
-            const item = episodes.find(episode => episode.Id === id);
+            const item = items.find(item => item.Id === id);
             if (!item) throw new Error('Unknown demo item');
             document.querySelector('.btnUserRating').dataset.id = id;
-            document.getElementById('demo-playing-name').textContent = `Season ${item.ParentIndexNumber} · Episode ${item.IndexNumber} · ${item.Name}`;
+            const media = item.Type === 'Movie' ? 'movie' : item.Type === 'TvChannel' ? 'live-tv' : 'episode';
+            this.media = media;
+            document.querySelector('.demo-stage').dataset.media = media;
+            document.getElementById('demo-playing-title').textContent = media === 'episode' ? 'The long way home.' : item.Name;
+            document.getElementById('demo-playing-type').textContent = media === 'movie' ? 'NOW PLAYING · A FICTIONAL FILM' : media === 'live-tv' ? 'ON AIR · A FICTIONAL CHANNEL' : 'NOW PLAYING · A FICTIONAL SERIES';
+            document.getElementById('demo-playing-name').textContent = media === 'episode'
+                ? `Season ${item.ParentIndexNumber} · Episode ${item.IndexNumber} · ${item.Name}`
+                : media === 'movie' ? `${item.ProductionYear} · ${item.Genres.join(' / ')}`
+                : `Channel ${item.ChannelNumber} · ${item.CurrentProgram?.Name || 'Programme information unavailable'}`;
+            document.querySelector('.demo-time').textContent = media === 'live-tv' ? '● LIVE' : media === 'movie' ? '25:00 / 108:00' : '18:42 / 48:00';
+            for (const kind of ['episode', 'movie', 'live-tv']) document.getElementById(`demo-${kind}`).setAttribute('aria-pressed', String(kind === media));
+            this.updateInstructions();
+        },
+        setMedia(media) {
+            // A fresh page mirrors starting a different item in Jellyfin and clears
+            // the original desktop popup's per-video cached groups.
+            const url = new URL(location.href);
+            url.searchParams.set('media', media);
+            url.searchParams.set('layout', media === 'episode' ? this.layout : 'tv');
+            location.assign(url.href);
+        },
+        updateInstructions() {
+            const description = this.media === 'movie' ? 'Browse similar films' : this.media === 'live-tv' ? 'Browse live channels' : 'Browse this show';
+            const hint = this.layout === 'tv' ? 'Open the preview with your remote or keyboard.' : 'Use the preview button in the player controls.';
+            const instructions = document.getElementById('demo-instructions');
+            instructions.replaceChildren();
+            const key = document.createElement('kbd');
+            key.textContent = this.layout === 'tv' ? '↓' : '▤';
+            const label = document.createElement('div');
+            label.textContent = description;
+            const detail = document.createElement('span');
+            detail.textContent = hint;
+            label.append(detail);
+            instructions.append(key, label);
         },
         setLayout(layout) {
+            this.layout = layout;
+            if (layout === 'desktop' && this.media !== 'episode') {
+                this.setMedia('episode');
+                return;
+            }
             document.documentElement.classList.toggle('layout-tv', layout === 'tv');
             document.documentElement.classList.toggle('layout-desktop', layout !== 'tv');
             document.getElementById('demo-tv').setAttribute('aria-pressed', String(layout === 'tv'));
             document.getElementById('demo-desktop').setAttribute('aria-pressed', String(layout !== 'tv'));
-            document.getElementById('demo-instructions').innerHTML = layout === 'tv'
-                ? '<kbd>↓</kbd><div>Browse this show<span>Open the episode preview with your remote or keyboard.</span></div>'
-                : '<kbd>▤</kbd><div>Browse this show<span>Use the episode button in the player controls.</span></div>';
+            this.updateInstructions();
             document.dispatchEvent(new CustomEvent('viewshow', {bubbles: true}));
         }
     };
     if (params.get('scenario') === 'missing') {
         delete episodes[1].ImageTags.Primary;
         episodes[1].Overview = '';
+        movies[0].ImageTags = {};
+        movies[0].BackdropImageTags = [];
+        movies[0].Overview = '';
+        channels[0].ImageTags = {};
+        delete channels[0].CurrentProgram;
     }
     if (params.get('scenario') === 'unsafe') {
         episodes[1].Name = '<img src=x onerror="window.__unsafeExecuted=true">';
@@ -86,12 +152,14 @@
             if (options) Object.entries(options).forEach(([key, value]) => url.searchParams.set(key, value));
             return url.href;
         },
-        getImageUrl: id => `/demo/artwork.svg?episode=${encodeURIComponent(id)}`,
-        getScaledImageUrl: id => `/demo/artwork.svg?episode=${encodeURIComponent(id)}`,
+        getImageUrl: id => artworkUrl(id),
+        getScaledImageUrl: id => artworkUrl(id),
         async getItem(userId, id) {
             demo.calls.push({method: 'getItem', userId, id});
             await demo.wait();
-            return clone(episodes.find(episode => episode.Id === id));
+            const item = items.find(item => item.Id === id);
+            if (!item) throw new Error(`Unknown demo item: ${id}`);
+            return clone(item);
         },
         async getEpisodes(seriesId, options = {}) {
             demo.calls.push({method: 'getEpisodes', seriesId, options});
@@ -102,6 +170,24 @@
             demo.calls.push({method: 'getSeasons', seriesId, options});
             await demo.wait();
             return {Items: clone(seasons), TotalRecordCount: seasons.length};
+        },
+        async getSimilarItems(id, options = {}) {
+            demo.calls.push({method: 'getSimilarItems', id, options});
+            await demo.wait();
+            const similar = movies.filter(item => item.Id !== id);
+            return {Items: clone(similar.slice(0, options.Limit || 100)), TotalRecordCount: similar.length};
+        },
+        async getLiveTvChannels(options = {}) {
+            demo.calls.push({method: 'getLiveTvChannels', options});
+            await demo.wait();
+            return {Items: clone(channels.slice(options.StartIndex || 0, (options.StartIndex || 0) + (options.Limit || 200))), TotalRecordCount: channels.length};
+        },
+        async getLiveTvChannel(id, userId) {
+            demo.calls.push({method: 'getLiveTvChannel', id, userId});
+            await demo.wait();
+            const channel = channels.find(item => item.Id === id);
+            if (!channel) throw new Error(`Unknown demo channel: ${id}`);
+            return clone(channel);
         },
         async ajax(request) {
             const path = new URL(request.url, location.origin).pathname;
@@ -127,7 +213,7 @@
                 if (demo.failPlay) throw new Error('Synthetic playback failure');
                 demo.setPlaying(play[1]);
                 const toast = document.getElementById('demo-toast');
-                toast.textContent = 'Demo playback switched to ' + episodes.find(item => item.Id === play[1]).Name;
+                toast.textContent = 'Demo playback switched to ' + items.find(item => item.Id === play[1]).Name;
                 toast.hidden = false;
                 setTimeout(() => { toast.hidden = true; }, 3500);
                 return undefined;
@@ -142,6 +228,8 @@
     window.addEventListener('command', event => demo.playerCommands.push(event.detail.command));
     document.getElementById('demo-tv').addEventListener('click', () => demo.setLayout('tv'));
     document.getElementById('demo-desktop').addEventListener('click', () => demo.setLayout('desktop'));
+    for (const media of ['episode', 'movie', 'live-tv']) document.getElementById(`demo-${media}`).addEventListener('click', () => demo.setMedia(media));
+    demo.setPlaying(params.get('layout') === 'desktop' ? 'episode-2' : params.get('media') === 'movie' ? 'movie-1' : params.get('media') === 'live-tv' ? 'channel-1' : 'episode-2');
     demo.setLayout(params.get('layout') === 'desktop' ? 'desktop' : 'tv');
     demo.ready = true;
 })();

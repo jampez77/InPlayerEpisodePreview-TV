@@ -7,7 +7,7 @@ declare global {
     }
 }
 
-const panel = (page: Page) => page.getByRole('dialog', {name: 'Browse episodes'});
+const panel = (page: Page) => page.locator('#tvEpisodePreview');
 const title = (page: Page) => panel(page).locator('.ipep-tv-title');
 
 async function open(page: Page, query = '') {
@@ -20,6 +20,7 @@ test('TV opens with Down, identifies the playing episode, and closes with Up', a
     await open(page);
     await expect(page.locator('#popupPreviewButton')).toHaveCount(0);
     await expect(title(page)).toHaveText('The Glass Station');
+    await expect(panel(page)).toHaveAccessibleName('Browse episodes');
     await expect(panel(page).locator('.ipep-tv-season')).toHaveText('Season 1 · The Far Coast · Episode 2');
     await expect(panel(page).locator('.ipep-tv-series')).toHaveText('The Long Way Home');
     await expect(panel(page).locator('.ipep-tv-description')).toContainText('Beyond the last train stop');
@@ -198,7 +199,7 @@ test('loading errors have a working remote retry action', async ({page}) => {
     await page.evaluate(() => { window.__demo.failLoad = true; });
     await page.keyboard.press('ArrowDown');
     await expect(panel(page)).toHaveAttribute('data-state', 'error');
-    await expect(panel(page).getByRole('button', {name: 'Try loading episodes again'})).toBeFocused();
+    await expect(panel(page).getByRole('button', {name: 'Try loading preview again'})).toBeFocused();
     await page.evaluate(() => { window.__demo.failLoad = false; });
     await page.keyboard.press('Enter');
     await expect(title(page)).toHaveText('The Glass Station');

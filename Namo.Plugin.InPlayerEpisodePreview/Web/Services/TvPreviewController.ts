@@ -1,5 +1,6 @@
 import {TvEpisodePanel} from '../Components/TvEpisodePanel'
-import {TvEpisode, TvEpisodeSource, wrappedIndex} from './TvEpisodeSource'
+import {wrappedIndex} from './TvEpisodeSource'
+import {TvMediaDisabledError, TvMediaSource, type TvMediaItem, type TvMediaKind} from './TvMediaSource'
 import {PluginSettings} from '../Models/PluginSettings'
 import {Endpoints} from '../Endpoints'
 import {Logger} from './Logger'
@@ -22,23 +23,24 @@ const remoteCodes: Record<number, string> = {
     461: 'back', 10009: 'back'
 }
 
-/** Owns only TV episode navigation; ordinary player commands pass through when closed. */
+/** Owns TV media navigation; ordinary player commands pass through when closed. */
 export class TvPreviewController {
     private panel: TvEpisodePanel | null = null
-    private episodes: TvEpisode[] = []
+    private items: TvMediaItem[] = []
     private index = 0
     private nowPlayingId: string | null = null
+    private playingMediaId: string | null = null
     private previousFocus: HTMLElement | null = null
     private state: 'closed' | 'loading' | 'ready' | 'error' | 'playing' = 'closed'
     private generation = 0
     private observer: MutationObserver
     private playerObserver: MutationObserver | null = null
-    private readonly source = new TvEpisodeSource()
+    private readonly source = new TvMediaSource()
     private readonly heldKeys = new Set<string>()
 
     constructor(private options: {
         currentItemId: () => string | null,
-        enabled: () => boolean,
+        enabled: (kind: TvMediaKind) => boolean,
         settings: () => PluginSettings,
         logger: Logger
     }) {
@@ -65,7 +67,7 @@ export class TvPreviewController {
     }
 
     private canOpen(): boolean {
-        return isTvLayout() && isVideoRoute() && this.options.enabled()
+        return isTvLayout() && isVideoRoute()
             && typeof ApiClient !== 'undefined' && !!ApiClient.getCurrentUserId() && !this.hasOtherDialog()
     }
 
@@ -184,20 +186,23 @@ export class TvPreviewController {
                 })
             }
             if (!this.isCurrent(generation)) return
-            if (!itemId) throw new Error('Start an episode to browse this show.')
+            if (!itemId) throw new Error('Start an episode, film, or live TV channel to browse.')
             this.nowPlayingId = itemId
-            const result = await this.source.load(itemId)
+            const result = await this.source.load(itemId, this.options.enabled)
             if (!this.isCurrent(generation)) return
-            this.episodes = result.episodes
+            if (!this.options.enabled(result.kind)) { this.close(); return }
+            this.items = result.items
+            this.playingMediaId = result.playingItemId
             this.index = result.activeIndex
             this.state = 'ready'
             this.render()
             this.panel?.focus()
         } catch (error) {
             if (!this.isCurrent(generation)) return
-            this.options.logger.error("Couldn't load TV episode preview", error)
+            if (error instanceof TvMediaDisabledError) { this.close(); return }
+            this.options.logger.error("Couldn't load TV media preview", error)
             this.state = 'error'
-            this.panel?.showError(error instanceof Error ? error.message : 'Could not load episodes. Check your connection and try again.')
+            this.panel?.showError(error instanceof Error ? error.message : 'Could not load the preview. Check your connection and try again.')
             this.panel?.focus()
         }
     }
@@ -207,24 +212,26 @@ export class TvPreviewController {
     }
 
     private navigate(direction: -1 | 1): void {
-        if (this.state !== 'ready' || !this.episodes.length) return
+        if (this.state !== 'ready' || !this.items.length) return
         const previous = this.index
-        this.index = wrappedIndex(this.index, direction, this.episodes.length)
-        const wrapped = this.episodes.length > 1 && (direction > 0 ? this.index < previous : this.index > previous)
-        this.render(wrapped ? (direction > 0 ? 'Back to the first episode' : 'Wrapped to the last episode') : '')
+        this.index = wrappedIndex(this.index, direction, this.items.length)
+        const wrapped = this.items.length > 1 && (direction > 0 ? this.index < previous : this.index > previous)
+        const kind = this.items[this.index].kind
+        const noun = kind === 'channel' ? 'channel' : kind === 'movie' ? 'film' : 'episode'
+        this.render(wrapped ? (direction > 0 ? (kind === 'movie' ? 'Back to the current film' : `Back to the first ${noun}`) : `Wrapped to the last ${noun}`) : '')
         this.panel?.focus()
     }
 
     private render(announcement = ''): void {
-        const episode = this.episodes[this.index]
+        const episode = this.items[this.index]
         if (!episode || !this.panel) return
         const settings = this.options.settings()
-        const shouldBlur = !settings.OnlyBlurUnwatched || !episode.played
+        const shouldBlur = episode.kind !== 'channel' && (!settings.OnlyBlurUnwatched || !episode.played)
         this.panel.showEpisode(episode, {
-            previous: this.episodes[wrappedIndex(this.index, -1, this.episodes.length)],
-            next: this.episodes[wrappedIndex(this.index, 1, this.episodes.length)],
-            index: this.index, total: this.episodes.length,
-            isPlaying: episode.id === (this.options.currentItemId() || this.nowPlayingId), announcement,
+            previous: this.items[wrappedIndex(this.index, -1, this.items.length)],
+            next: this.items[wrappedIndex(this.index, 1, this.items.length)],
+            index: this.index, total: this.items.length,
+            isPlaying: episode.id === this.playingMediaId, announcement,
             blurThumbnail: settings.BlurThumbnail && shouldBlur,
             blurDescription: settings.BlurDescription && shouldBlur
         })
@@ -233,20 +240,20 @@ export class TvPreviewController {
     private async play(): Promise<void> {
         if (this.state === 'error') { await this.load(); return }
         if (this.state !== 'ready') return
-        const episode = this.episodes[this.index]
-        if (episode.id === (this.options.currentItemId() || this.nowPlayingId)) { this.close(); return }
+        const episode = this.items[this.index]
+        if (episode.id === this.playingMediaId) { this.close(); return }
         const generation = this.generation
         this.state = 'playing'
         this.panel?.setPlaying(true)
         try {
-            const ticks = episode.played ? 0 : episode.playbackPositionTicks
+            const ticks = episode.kind === 'channel' || episode.played ? 0 : episode.playbackPositionTicks
             // Use the existing authenticated session endpoint, retaining errors for an actionable retry.
             await ApiClient.ajax({type: 'GET', url: ApiClient.getUrl(`/${Endpoints.BASE}${Endpoints.PLAY_MEDIA}`
                 .replace('{itemId}', episode.id).replace('{ticks}', String(ticks)))})
             if (this.isCurrent(generation)) this.close()
         } catch (error) {
             if (!this.isCurrent(generation)) return
-            this.options.logger.error("Couldn't play the selected TV episode", error)
+            this.options.logger.error("Couldn't play the selected media", error)
             this.state = 'ready'
             this.panel?.setPlaying(false)
             this.render('Could not start playback. Press OK to try again.')
@@ -262,8 +269,9 @@ export class TvPreviewController {
         this.playerObserver = null
         this.panel?.destroy()
         this.panel = null
-        this.episodes = []
+        this.items = []
         this.nowPlayingId = null
+        this.playingMediaId = null
         document.documentElement.classList.remove('ipep-tv-preview-open')
         if (restoreFocus && this.previousFocus?.isConnected && this.previousFocus.getClientRects().length
             && !this.previousFocus.closest('[hidden], .hide')) this.previousFocus.focus({preventScroll: true})

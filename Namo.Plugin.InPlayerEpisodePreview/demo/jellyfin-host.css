@@ -75,3 +75,9 @@
     #previewPopup .previewQuickActionContainer { gap: 0; }
     #previewPopup .paper-icon-button-light { width: 30px; height: 30px; padding: 5px; }
 }
+
+/* The unchanged desktop template uses server image endpoints directly. This
+   offline episode fixture uses local artwork, including under a Pages subpath. */
+#previewPopup .previewItemImageCard .cardImageContainer {
+    background-image: url('artwork.svg') !important;
+}

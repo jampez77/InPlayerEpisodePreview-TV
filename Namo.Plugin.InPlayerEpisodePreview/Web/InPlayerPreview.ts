@@ -27,7 +27,7 @@ const playbackHandler: PlaybackHandler = new PlaybackHandler(logger)
 const listElementFactory = new ListElementFactory(playbackHandler, programDataStore, logger)
 const tvPreview = new TvPreviewController({
     currentItemId: getLatestUserRatingItemId,
-    enabled: () => programDataStore.isTypeAllowedForPreview(ItemType.Episode),
+    enabled: kind => kind === 'channel' || programDataStore.isTypeAllowedForPreview(kind === 'movie' ? ItemType.Movie : ItemType.Episode),
     settings: () => programDataStore.pluginSettings,
     logger
 })
