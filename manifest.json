@@ -9,6 +9,30 @@
     "imageUrl": "https://raw.githubusercontent.com/jampez77/InPlayerEpisodePreview-TV/main/Images/tv-logo.png",
     "versions": [
       {
+        "version": "2.5.4.3",
+        "changelog": "## Changelog\n- Episodes and films now use the same local Jellyfin player action as live channels, preserving resume positions. The previous release changed only channel playback, leaving episode/film selections on the session-command path that could close after acknowledgement without playing.\n- All TV selections now wait for the authenticated client playback report. An early player metadata change alone cannot dismiss the preview; failed or ignored actions retain the selection and offer a retry after 20 seconds.\n- Cinema Mode is supported: a newly started intro confirms playback only when its exact queue position leads to the selected feature. Unchanged intros and unrelated queued features do not count.\n- Version the injected script URL and disable caching of client scripts and playback reports to prevent stale update code or confirmation data.\n- Verified the local playback contract against official Jellyfin Web v12.0. Validation: 26 unit tests, 75 browser tests, and server builds for 10.10.7, 10.11.x, and 12.x pass. Physical LG playback still needs a retest.\n- Jellyfin 12 users should install version 2.5.4.3, restart Jellyfin, and fully close and reopen the LG app. README and demo updated.",
+        "targetAbi": "12.0.0",
+        "sourceUrl": "https://github.com/jampez77/InPlayerEpisodePreview-TV/releases/download/v2.5.4/InPlayerEpisodePreview_2.5.4.3-12.0.0.zip",
+        "checksum": "4a074337eebf1401475cfc90872b1f11",
+        "timestamp": "2026-09-21T22:12:54Z"
+      },
+      {
+        "version": "2.5.4.2",
+        "changelog": "## Changelog\n- Episodes and films now use the same local Jellyfin player action as live channels, preserving resume positions. The previous release changed only channel playback, leaving episode/film selections on the session-command path that could close after acknowledgement without playing.\n- All TV selections now wait for the authenticated client playback report. An early player metadata change alone cannot dismiss the preview; failed or ignored actions retain the selection and offer a retry after 20 seconds.\n- Cinema Mode is supported: a newly started intro confirms playback only when its exact queue position leads to the selected feature. Unchanged intros and unrelated queued features do not count.\n- Version the injected script URL and disable caching of client scripts and playback reports to prevent stale update code or confirmation data.\n- Verified the local playback contract against official Jellyfin Web v12.0. Validation: 26 unit tests, 75 browser tests, and server builds for 10.10.7, 10.11.x, and 12.x pass. Physical LG playback still needs a retest.\n- Jellyfin 12 users should install version 2.5.4.3, restart Jellyfin, and fully close and reopen the LG app. README and demo updated.",
+        "targetAbi": "10.11.0",
+        "sourceUrl": "https://github.com/jampez77/InPlayerEpisodePreview-TV/releases/download/v2.5.4/InPlayerEpisodePreview_2.5.4.2-10.11.0.zip",
+        "checksum": "65dee5a9c3adaa0d798fd527e4afa1b2",
+        "timestamp": "2026-09-21T22:12:54Z"
+      },
+      {
+        "version": "2.5.4.1",
+        "changelog": "## Changelog\n- Episodes and films now use the same local Jellyfin player action as live channels, preserving resume positions. The previous release changed only channel playback, leaving episode/film selections on the session-command path that could close after acknowledgement without playing.\n- All TV selections now wait for the authenticated client playback report. An early player metadata change alone cannot dismiss the preview; failed or ignored actions retain the selection and offer a retry after 20 seconds.\n- Cinema Mode is supported: a newly started intro confirms playback only when its exact queue position leads to the selected feature. Unchanged intros and unrelated queued features do not count.\n- Version the injected script URL and disable caching of client scripts and playback reports to prevent stale update code or confirmation data.\n- Verified the local playback contract against official Jellyfin Web v12.0. Validation: 26 unit tests, 75 browser tests, and server builds for 10.10.7, 10.11.x, and 12.x pass. Physical LG playback still needs a retest.\n- Jellyfin 12 users should install version 2.5.4.3, restart Jellyfin, and fully close and reopen the LG app. README and demo updated.",
+        "targetAbi": "10.10.7",
+        "sourceUrl": "https://github.com/jampez77/InPlayerEpisodePreview-TV/releases/download/v2.5.4/InPlayerEpisodePreview_2.5.4.1-10.10.7.zip",
+        "checksum": "5331ae9f5e7815a69afb8317b07a5306",
+        "timestamp": "2026-09-21T22:12:54Z"
+      },
+      {
         "version": "2.5.3.3",
         "changelog": "## Changelog\n- Watch channel now uses Jellyfin's local channel-card playback action when available, avoiding a server-to-TV command round trip that can silently fail on webOS clients. The authenticated session endpoint remains a fallback for clients without that action.\n- Keep Tuning channel visible until Jellyfin reports the selected channel. Accepted commands and stalled requests that never start playback offer a retry after 20 seconds.\n- Cover LG OK keycode 13, Jellyfin select commands, pointer clicks, delayed tuning, ignored commands, hung requests, and cancellation. Updated the README and demo scenarios.\n- Validation: 26 unit tests, 64 browser tests, and builds for Jellyfin 10.10.7, 10.11.x, and 12.x pass. Physical LG channel tuning still needs confirmation.\n- After updating, restart Jellyfin and fully close and reopen the LG app to load the new script.",
         "targetAbi": "12.0.0",
