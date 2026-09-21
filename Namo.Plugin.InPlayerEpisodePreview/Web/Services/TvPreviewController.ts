@@ -5,7 +5,7 @@ import {PluginSettings} from '../Models/PluginSettings'
 import {Endpoints} from '../Endpoints'
 import {Logger} from './Logger'
 import {tryPlayLocally} from './TvLocalPlayback'
-import {PlaybackTimeoutError, waitForPlayback} from './TvPlaybackConfirmation'
+import {captureLocalPlaybackCheck, PlaybackTimeoutError, waitForPlayback} from './TvPlaybackConfirmation'
 
 export function isTvLayout(): boolean {
     return document.documentElement.classList.contains('layout-tv') || document.body.classList.contains('layout-tv')
@@ -306,6 +306,7 @@ export class TvPreviewController {
         this.playbackAbort = playbackAbort
         try {
             const ticks = episode.kind === 'channel' || episode.played ? 0 : episode.playbackPositionTicks
+            const isPlayingLocally = captureLocalPlaybackCheck(episode.id, this.options.currentItemId)
             // Selections should originate in this client's player, without depending
             // on a server-to-client WebSocket command making a round trip back to the TV.
             const handledLocally = await tryPlayLocally(episode, ticks,
@@ -319,7 +320,7 @@ export class TvPreviewController {
             // The rating button's data-id can change before playback actually starts.
             const confirmation = waitForPlayback(episode, playbackAbort.signal, {
                 id: this.playingMediaId, playlistItemId: this.playingPlaylistItemId
-            })
+            }, isPlayingLocally)
             await (handledLocally ? confirmation
                 : Promise.race([confirmation, sendPlayRequest().then(() => confirmation)]))
             if (this.isCurrent(generation)) this.close()

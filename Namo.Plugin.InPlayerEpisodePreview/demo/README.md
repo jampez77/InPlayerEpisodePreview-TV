@@ -65,4 +65,6 @@ The fixture's `window.__demo` object also exposes `episodes`, `seasons`, `movies
 
 Playback tests also use `nativePlayRequests`, `playbackDelayMs`, `channelTuneDelayMs`, `ignorePlay`, and `stallPlay` to distinguish accepted commands from actual playback. `ignorePlay` affects both native and session playback paths; `stallPlay` leaves the fallback HTTP response pending. A delayed start keeps the button busy; a command accepted without starting playback offers a retry after 20 seconds. The tests distinguish the player's displayed metadata from the authenticated session's playback report, and cover episode/film resume positions as well as live tuning. Closing the panel cancels confirmation polling. These cases simulate the host's action contract and do not verify real playback on an LG TV.
 
+Automatic-close checks also use small, muted browser video streams. They verify that the preview closes when the selected item has a new playing source, even if the server report is stale or stalled. Metadata changes alone, the old stream continuing, and a paused replacement video do not count as successful playback.
+
 For installation, compatibility, and upstream attribution, see the [project README](https://github.com/jampez77/InPlayerEpisodePreview-TV#readme).

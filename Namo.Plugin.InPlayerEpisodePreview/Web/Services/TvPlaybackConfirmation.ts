@@ -9,17 +9,32 @@ export class PlaybackTimeoutError extends Error {
     }
 }
 
-/** Wait for the client's playback report, not its OSD metadata or an HTTP acknowledgement. */
+/** Snapshot before dispatch so the old stream cannot confirm a new selection. */
+export function captureLocalPlaybackCheck(itemId: string, currentItemId: () => string | null): () => boolean {
+    const videos = (): HTMLVideoElement[] => Array.from(document.querySelectorAll<HTMLVideoElement>('video.htmlvideoplayer'))
+    const source = (video: HTMLVideoElement) => video.srcObject || video.currentSrc
+    const previousSources = new Map(videos().map(video => [video, source(video)] as const))
+    return () => sameMediaId(currentItemId(), itemId) && videos().some(video => {
+        const currentSource = source(video)
+        return !!currentSource && (!previousSources.has(video) || previousSources.get(video) !== currentSource)
+            && video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA
+            && !video.paused && !video.ended && !video.error
+    })
+}
+
+/** Confirm a new local stream or the client's server report, never metadata/HTTP alone. */
 export function waitForPlayback(item: Pick<TvMediaItem, 'id' | 'kind'>, signal: AbortSignal,
-    previous: {id: string | null, playlistItemId?: string}): Promise<void> {
+    previous: {id: string | null, playlistItemId?: string}, isPlayingLocally?: () => boolean): Promise<void> {
     return new Promise((resolve, reject) => {
         let settled = false
         let pollTimer: ReturnType<typeof setTimeout> | undefined
+        let localTimer: ReturnType<typeof setInterval> | undefined
         let timeout: ReturnType<typeof setTimeout> | undefined
         const finish = (error?: Error): void => {
             if (settled) return
             settled = true
             clearTimeout(pollTimer)
+            clearInterval(localTimer)
             clearTimeout(timeout)
             signal.removeEventListener('abort', onAbort)
             if (error) reject(error)
@@ -61,6 +76,13 @@ export function waitForPlayback(item: Pick<TvMediaItem, 'id' | 'kind'>, signal: 
         if (signal.aborted) { onAbort(); return }
         signal.addEventListener('abort', onAbort, {once: true})
         timeout = setTimeout(() => finish(new PlaybackTimeoutError(item.kind)), 20000)
-        void check()
+        if (isPlayingLocally) {
+            const checkLocal = (): void => { if (!settled && isPlayingLocally()) finish() }
+            // The TV may start playing before its session updates. Keep this
+            // independent so a slow or stalled server request cannot hold the panel open.
+            localTimer = setInterval(checkLocal, 100)
+            checkLocal()
+        }
+        if (!settled) void check()
     })
 }

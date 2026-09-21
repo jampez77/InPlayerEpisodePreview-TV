@@ -55,7 +55,7 @@ Live TV requires channels already configured and working in Jellyfin. Programme 
 
 TV playback uses Jellyfin's local player action for episodes, films, and channels where available, with the authenticated session command as a fallback. Episodes and films preserve their resume position; channels start live. Both the remote's **OK** button and pointer clicks use this action.
 
-The button shows **Tuning channel…**, **Starting episode…**, or **Starting film…** until the client reports the selected item as playing. A newly started Cinema Mode pre-roll also confirms playback when its queue leads to the selected feature. A successful request, unchanged existing pre-roll, or changed player metadata alone does not close the preview. If playback is not reported within 20 seconds, the selection stays open with a retry message. **Up / Back** still closes the preview, and leaving the player cancels the wait.
+The preview closes automatically once the selected episode, film, or channel starts. The button shows **Tuning channel…**, **Starting episode…**, or **Starting film…** during the change. On the web player, confirmation uses the selected item and its new, playing video source, so the TV does not have to wait for a delayed server report. Server playback reports remain a fallback, including newly started Cinema Mode pre-rolls whose queues lead to the selected feature. A successful request, unchanged existing pre-roll, or changed player metadata alone does not close the preview. If playback is not confirmed within 20 seconds, the selection stays open with a retry message. **Up / Back** still closes the preview, and leaving the player cancels the wait.
 
 ![Live TV channel browser with current programme details](Images/live-tv-preview.png)
 
