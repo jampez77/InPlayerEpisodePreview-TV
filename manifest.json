@@ -9,6 +9,30 @@
     "imageUrl": "https://raw.githubusercontent.com/jampez77/InPlayerEpisodePreview-TV/main/Images/tv-logo.png",
     "versions": [
       {
+        "version": "2.5.0.3",
+        "changelog": "## Changelog\nAdd TV browsing for the current film and similar Jellyfin films, with resume support. Add Live TV channel browsing with current programme details and explicit channel selection. Preserve episode navigation and the original desktop preview. Add movie and Live TV demo modes, new screenshots, and a public interactive demo linked from the README.",
+        "targetAbi": "12.0.0",
+        "sourceUrl": "https://github.com/jampez77/InPlayerEpisodePreview-TV/releases/download/v2.5.0/InPlayerEpisodePreview_2.5.0.3-12.0.0.zip",
+        "checksum": "fe17b293edfb8df597bd9de437d316f7",
+        "timestamp": "2026-09-21T20:28:16Z"
+      },
+      {
+        "version": "2.5.0.2",
+        "changelog": "## Changelog\nAdd TV browsing for the current film and similar Jellyfin films, with resume support. Add Live TV channel browsing with current programme details and explicit channel selection. Preserve episode navigation and the original desktop preview. Add movie and Live TV demo modes, new screenshots, and a public interactive demo linked from the README.",
+        "targetAbi": "10.11.0",
+        "sourceUrl": "https://github.com/jampez77/InPlayerEpisodePreview-TV/releases/download/v2.5.0/InPlayerEpisodePreview_2.5.0.2-10.11.0.zip",
+        "checksum": "09750a93645b2a73c1e3645ff8aef9b0",
+        "timestamp": "2026-09-21T20:28:16Z"
+      },
+      {
+        "version": "2.5.0.1",
+        "changelog": "## Changelog\nAdd TV browsing for the current film and similar Jellyfin films, with resume support. Add Live TV channel browsing with current programme details and explicit channel selection. Preserve episode navigation and the original desktop preview. Add movie and Live TV demo modes, new screenshots, and a public interactive demo linked from the README.",
+        "targetAbi": "10.10.7",
+        "sourceUrl": "https://github.com/jampez77/InPlayerEpisodePreview-TV/releases/download/v2.5.0/InPlayerEpisodePreview_2.5.0.1-10.10.7.zip",
+        "checksum": "db8e5c03aa414e1be4b5bc25f602f8e6",
+        "timestamp": "2026-09-21T20:28:16Z"
+      },
+      {
         "version": "2.4.2.3",
         "changelog": "## Changelog\nSimplify TV season labels by removing duplicate Series/Chapter numbering while keeping descriptive season names. Remove the on-screen remote instruction hints and refresh the README screenshots.",
         "targetAbi": "12.0.0",
