@@ -42,6 +42,8 @@ The test command rebuilds the bundle, and Playwright starts the local demo serve
 
 These checks validate the simulated environment. They do not replace testing with a live Jellyfin server, client, and physical remote.
 
+The webOS regression checks remove CSS features unavailable in webOS 6's Chromium 79 engine and send numeric remote key events. They check that the panel stays on-screen, artwork keeps its shape, and Down/Left/Right/Up navigation works. They simulate these specific limitations in Chromium rather than running a webOS emulator.
+
 The [public pre-roll demo](https://jampez77.github.io/InPlayerEpisodePreview-TV/demo/index.html?scenario=preroll#/video) simulates the authenticated session queue used to find the next supported film or episode. The [standalone trailer example](https://jampez77.github.io/InPlayerEpisodePreview-TV/demo/index.html?scenario=trailer-no-feature#/video) has no queued feature: no panel appears, and the player's normal controls remain available.
 
 ## Manual scenarios

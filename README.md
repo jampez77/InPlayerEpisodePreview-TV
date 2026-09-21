@@ -67,13 +67,15 @@ TV mode follows Jellyfin's **Display → Layout → TV** setting. The player but
 
 This is a **Jellyfin server plugin that extends Jellyfin Web**. The TV interface works in clients using the server's web player, including Jellyfin Media Player with the TV layout selected. It does not add a panel to independently implemented native players, such as the native Android TV player.
 
+The [official LG webOS app](https://github.com/jellyfin/jellyfin-webos) also loads the server's web interface. The TV panel uses positioning, thumbnail sizing, and spacing compatible with [webOS 6's Chromium 79 engine](https://webostv.developer.lge.com/develop/specifications/web-api-and-web-engine). If updating on an LG TV, fully close and reopen the Jellyfin app after restarting the server so it loads the updated script.
+
 | Jellyfin server | Release package target | Build framework |
 | --- | --- | --- |
 | 10.10.7 | 10.10.7 | .NET 8 |
 | 10.11.x | 10.11.0 | .NET 9 |
 | 12.x | 12.0 / 12.0.0 | .NET 10 |
 
-Builds cover these three server targets. Automated browser tests use a simulated Jellyfin API; live-server and physical-remote testing remains outstanding. When reporting a problem, include the server version, client, layout setting, and steps to reproduce it.
+Builds cover these three server targets. Automated browser tests use a simulated Jellyfin API and include webOS 6 CSS limitations and remote key codes; live-server and physical-remote testing remains outstanding. When reporting a problem, include the server version, client, layout setting, and steps to reproduce it.
 
 ## Install
 
