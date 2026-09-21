@@ -2,331 +2,35 @@
   {
     "guid": "73833d5f-0bcb-45dc-ab8b-7ce668f4345d",
     "name": "InPlayerEpisodePreview",
-    "overview": "Adds an overview of episode data inside the video player.",
-    "description": "Adds an overview of episode data inside the video player.",
-    "owner": "Namo",
+    "overview": "TV-friendly in-player episode browsing with continuous remote navigation.",
+    "description": "Independent TV edition by jampez77, inspired by and based on Namo2/InPlayerEpisodePreview. Browse episodes across seasons using your remote, with titles, descriptions, and thumbnails. Desktop and mobile retain the original player button.",
+    "owner": "jampez77",
     "category": "General",
-    "imageUrl": "https://raw.githubusercontent.com/Namo2/InPlayerEpisodePreview/refs/heads/master/Images/logo.png",
+    "imageUrl": "https://raw.githubusercontent.com/jampez77/InPlayerEpisodePreview-TV/main/Images/tv-logo.png",
     "versions": [
       {
-        "version": "2.4.0.3",
-        "changelog": "## Changelog\n### Features\n- Include Videos with multiple parts (can be toggled in the plugin settings)\n- Auto close the preview popup when starting a new episode (can be toggled in the plugin settings)\n- Switch the display mode for the season summary by clicking on the label\n### Fixes\n- Episode playstate will not be reset anymore on a rewatch\n- Spoiler blur will now be updated immediately when triggering the playstate button inside the preview popup\n- Video progress bar and season summary will now be live updated\n- Season summary will now be displayed at the correct position during season selection\n- Empty descriptions will now be shown empty instead of \"loading...\"",
-        "targetAbi": "12.0",
-        "sourceUrl": "https://github.com/Namo2/InPlayerEpisodePreview/releases/download/v2.4.0/InPlayerEpisodePreview_2.4.0.3-12.0.zip",
-        "checksum": "b9a58cf11e362d4e4f38359d849363bb",
-        "timestamp": "2026-09-19T20:41:17Z"
-      },
-      {
-        "version": "2.4.0.2",
-        "changelog": "## Changelog\n### Features\n- Include Videos with multiple parts (can be toggled in the plugin settings)\n- Auto close the preview popup when starting a new episode (can be toggled in the plugin settings)\n- Switch the display mode for the season summary by clicking on the label\n### Fixes\n- Episode playstate will not be reset anymore on a rewatch\n- Spoiler blur will now be updated immediately when triggering the playstate button inside the preview popup\n- Video progress bar and season summary will now be live updated\n- Season summary will now be displayed at the correct position during season selection\n- Empty descriptions will now be shown empty instead of \"loading...\"",
-        "targetAbi": "10.11.0",
-        "sourceUrl": "https://github.com/Namo2/InPlayerEpisodePreview/releases/download/v2.4.0/InPlayerEpisodePreview_2.4.0.2-10.11.0.zip",
-        "checksum": "f7ec038041fcc6182bb6989678785999",
-        "timestamp": "2026-09-19T20:41:17Z"
-      },
-      {
-        "version": "2.4.0.1",
-        "changelog": "## Changelog\n### Features\n- Include Videos with multiple parts (can be toggled in the plugin settings)\n- Auto close the preview popup when starting a new episode (can be toggled in the plugin settings)\n- Switch the display mode for the season summary by clicking on the label\n### Fixes\n- Episode playstate will not be reset anymore on a rewatch\n- Spoiler blur will now be updated immediately when triggering the playstate button inside the preview popup\n- Video progress bar and season summary will now be live updated\n- Season summary will now be displayed at the correct position during season selection\n- Empty descriptions will now be shown empty instead of \"loading...\"",
-        "targetAbi": "10.10.7",
-        "sourceUrl": "https://github.com/Namo2/InPlayerEpisodePreview/releases/download/v2.4.0/InPlayerEpisodePreview_2.4.0.1-10.10.7.zip",
-        "checksum": "c31d679bee46caf25da130e83d922968",
-        "timestamp": "2026-09-19T20:41:17Z"
-      },
-      {
-        "version": "2.3.0.3",
-        "changelog": "## Changelog\n- Multi-Episode files will now be shown with their correct index range\n- Virtual seasons will now be displayed in the preview if real files exists",
-        "targetAbi": "12.0",
-        "sourceUrl": "https://github.com/Namo2/InPlayerEpisodePreview/releases/download/v2.3.0/InPlayerEpisodePreview_2.3.0.3-12.0.zip",
-        "checksum": "e3c48754034a77cb164eb5f6fd41bd85",
-        "timestamp": "2026-09-13T10:09:42Z"
-      },
-      {
-        "version": "2.3.0.2",
-        "changelog": "## Changelog\n- Multi-Episode files will now be shown with their correct index range\n- Virtual seasons will now be displayed in the preview if real files exists",
-        "targetAbi": "10.11.0",
-        "sourceUrl": "https://github.com/Namo2/InPlayerEpisodePreview/releases/download/v2.3.0/InPlayerEpisodePreview_2.3.0.2-10.11.0.zip",
-        "checksum": "83191ec6c84d8d312ab10d49bd8f0fb1",
-        "timestamp": "2026-09-13T10:09:42Z"
-      },
-      {
-        "version": "2.3.0.1",
-        "changelog": "## Changelog\n- Multi-Episode files will now be shown with their correct index range\n- Virtual seasons will now be displayed in the preview if real files exists",
-        "targetAbi": "10.10.7",
-        "sourceUrl": "https://github.com/Namo2/InPlayerEpisodePreview/releases/download/v2.3.0/InPlayerEpisodePreview_2.3.0.1-10.10.7.zip",
-        "checksum": "a7cbd2d35c8a2be4a301dd6216201663",
-        "timestamp": "2026-09-13T10:09:42Z"
-      },
-      {
-        "version": "2.2.0.3",
-        "changelog": "## Changelog\n- An always expanded mode is now available, coming with two designs\n- Spoiler blur for images has been increased\n- The scrollbar will now be visible, ignoring default theme hiding rules\n## Expanded mode showcase (side by side setting)\n<img src=\"https://raw.githubusercontent.com/Namo2/InPlayerEpisodePreview/refs/heads/master/Images/expanded-view-side-by-side.png\" style=\"max-width: 100%; height: auto;\"/>",
-        "targetAbi": "12.0",
-        "sourceUrl": "https://github.com/Namo2/InPlayerEpisodePreview/releases/download/v2.2.0/InPlayerEpisodePreview_2.2.0.3-12.0.zip",
-        "checksum": "260a60d51ffa15bc197798da52eadba4",
-        "timestamp": "2026-09-10T12:17:53Z"
-      },
-      {
-        "version": "2.2.0.2",
-        "changelog": "## Changelog\n- An always expanded mode is now available, coming with two designs\n- Spoiler blur for images has been increased\n- The scrollbar will now be visible, ignoring default theme hiding rules\n## Expanded mode showcase (side by side setting)\n<img src=\"https://raw.githubusercontent.com/Namo2/InPlayerEpisodePreview/refs/heads/master/Images/expanded-view-side-by-side.png\" style=\"max-width: 100%; height: auto;\"/>",
-        "targetAbi": "10.11.0",
-        "sourceUrl": "https://github.com/Namo2/InPlayerEpisodePreview/releases/download/v2.2.0/InPlayerEpisodePreview_2.2.0.2-10.11.0.zip",
-        "checksum": "8f241c96e2d10fcdc35296cd1c9b96dd",
-        "timestamp": "2026-09-10T12:17:53Z"
-      },
-      {
-        "version": "2.2.0.1",
-        "changelog": "## Changelog\n- An always expanded mode is now available, coming with two designs\n- Spoiler blur for images has been increased\n- The scrollbar will now be visible, ignoring default theme hiding rules\n## Expanded mode showcase (side by side setting)\n<img src=\"https://raw.githubusercontent.com/Namo2/InPlayerEpisodePreview/refs/heads/master/Images/expanded-view-side-by-side.png\" style=\"max-width: 100%; height: auto;\"/>",
-        "targetAbi": "10.10.7",
-        "sourceUrl": "https://github.com/Namo2/InPlayerEpisodePreview/releases/download/v2.2.0/InPlayerEpisodePreview_2.2.0.1-10.10.7.zip",
-        "checksum": "91f7d4dcbc393d550427e7112be986ed",
-        "timestamp": "2026-09-10T12:17:53Z"
-      },
-      {
-        "version": "2.1.1.3",
-        "changelog": "- Fixed a bug where the preview button did not appear consistently\n- Fixed a bug where the preview sometimes showed data for a previously watched item instead of the current one",
-        "targetAbi": "12.0",
-        "sourceUrl": "https://github.com/Namo2/InPlayerEpisodePreview/releases/download/v2.1.1/InPlayerEpisodePreview_2.1.1.3-12.0.zip",
-        "checksum": "3dc18390a81c382ff3ac2e19741cbe3a",
-        "timestamp": "2026-09-09T11:51:29Z"
-      },
-      {
-        "version": "2.1.1.2",
-        "changelog": "- Fixed a bug where the preview button did not appear consistently\n- Fixed a bug where the preview sometimes showed data for a previously watched item instead of the current one",
-        "targetAbi": "10.11.0",
-        "sourceUrl": "https://github.com/Namo2/InPlayerEpisodePreview/releases/download/v2.1.1/InPlayerEpisodePreview_2.1.1.2-10.11.0.zip",
-        "checksum": "8ddb6e89e2919e43106918d7dde4a4bb",
-        "timestamp": "2026-09-09T11:51:29Z"
-      },
-      {
-        "version": "2.1.1.1",
-        "changelog": "- Fixed a bug where the preview button did not appear consistently\n- Fixed a bug where the preview sometimes showed data for a previously watched item instead of the current one",
-        "targetAbi": "10.10.7",
-        "sourceUrl": "https://github.com/Namo2/InPlayerEpisodePreview/releases/download/v2.1.1/InPlayerEpisodePreview_2.1.1.1-10.10.7.zip",
-        "checksum": "bf8651999bc19c92b614a5c6b939a444",
-        "timestamp": "2026-09-09T11:51:29Z"
-      },
-      {
-        "version": "2.1.0.3",
-        "changelog": "### Official Jellyfin V12.0 Support\n\n### Changelog\n- Support for older WebOS TVs\n- Increased logging with a selectable frontend log level\n- \"Ends at\" will now correctly take playback speed into account\n- Current Collection/Playlist will now be reset when going to the dashboard",
-        "targetAbi": "12.0",
-        "sourceUrl": "https://github.com/Namo2/InPlayerEpisodePreview/releases/download/v2.1.0/InPlayerEpisodePreview_2.1.0.3-12.0.zip",
-        "checksum": "35c12f622756008342ec7418b6f259b9",
-        "timestamp": "2026-09-08T15:16:36Z"
-      },
-      {
-        "version": "2.1.0.2",
-        "changelog": "### Official Jellyfin V12.0 Support\n\n### Changelog\n- Support for older WebOS TVs\n- Increased logging with a selectable frontend log level\n- \"Ends at\" will now correctly take playback speed into account\n- Current Collection/Playlist will now be reset when going to the dashboard",
-        "targetAbi": "10.11.0",
-        "sourceUrl": "https://github.com/Namo2/InPlayerEpisodePreview/releases/download/v2.1.0/InPlayerEpisodePreview_2.1.0.2-10.11.0.zip",
-        "checksum": "e2a5e2ffaee810814495bb4d01500376",
-        "timestamp": "2026-09-08T15:16:36Z"
-      },
-      {
-        "version": "2.1.0.1",
-        "changelog": "### Official Jellyfin V12.0 Support\n\n### Changelog\n- Support for older WebOS TVs\n- Increased logging with a selectable frontend log level\n- \"Ends at\" will now correctly take playback speed into account\n- Current Collection/Playlist will now be reset when going to the dashboard",
-        "targetAbi": "10.10.7",
-        "sourceUrl": "https://github.com/Namo2/InPlayerEpisodePreview/releases/download/v2.1.0/InPlayerEpisodePreview_2.1.0.1-10.10.7.zip",
-        "checksum": "3af676da7bd890e9a4c1168d27aab2a4",
-        "timestamp": "2026-09-08T15:16:36Z"
-      },
-      {
-        "version": "2.0.0.3",
-        "changelog": "- Lazy loaded data.\n- Search for related Collections/Playlists.\n- Show watch count for Seasons and Collection/Playlist groups.\n- Option to only spoiler protect unwatched episodes.\n- Limit description height and allow expanding.\n- Fixed playback sometimes starting in the wrong browser tab or device.\n- Fixed preview UI remaining visible after navigating away from playback.\n- Fixed plugin settings not applying to non-admin users.\n- Bumped frontend dependencies to their latest versions.",
+        "version": "2.4.1.3",
+        "changelog": "TV edition: Down opens episode browsing, Left/Right crosses season boundaries and wraps around the show, Up/Back closes, and OK plays or resumes. Includes season and episode titles, descriptions, thumbnails, and the original player button for non-TV layouts. Based on Namo2/InPlayerEpisodePreview.",
         "targetAbi": "12.0.0",
-        "sourceUrl": "https://github.com/Namo2/InPlayerEpisodePreview/releases/download/v2.0.0/InPlayerEpisodePreview_2.0.0.3-12.0.0.zip",
-        "checksum": "c147566119677243e4af7fb8f3e75e9f",
-        "timestamp": "2026-08-17T19:35:23Z"
+        "sourceUrl": "https://github.com/jampez77/InPlayerEpisodePreview-TV/releases/download/v2.4.1/InPlayerEpisodePreview_2.4.1.3-12.0.0.zip",
+        "checksum": "7f67b4b68b8eb086be5f2c7dcd265277",
+        "timestamp": "2026-09-21T19:39:06Z"
       },
       {
-        "version": "2.0.0.2",
-        "changelog": "- Lazy loaded data.\n- Search for related Collections/Playlists.\n- Show watch count for Seasons and Collection/Playlist groups.\n- Option to only spoiler protect unwatched episodes.\n- Limit description height and allow expanding.\n- Fixed playback sometimes starting in the wrong browser tab or device.\n- Fixed preview UI remaining visible after navigating away from playback.\n- Fixed plugin settings not applying to non-admin users.\n- Bumped frontend dependencies to their latest versions.",
+        "version": "2.4.1.2",
+        "changelog": "TV edition: Down opens episode browsing, Left/Right crosses season boundaries and wraps around the show, Up/Back closes, and OK plays or resumes. Includes season and episode titles, descriptions, thumbnails, and the original player button for non-TV layouts. Based on Namo2/InPlayerEpisodePreview.",
         "targetAbi": "10.11.0",
-        "sourceUrl": "https://github.com/Namo2/InPlayerEpisodePreview/releases/download/v2.0.0/InPlayerEpisodePreview_2.0.0.2-10.11.0.zip",
-        "checksum": "6e759ef77538df56bfc7d01ca03be5a3",
-        "timestamp": "2026-08-17T19:35:23Z"
+        "sourceUrl": "https://github.com/jampez77/InPlayerEpisodePreview-TV/releases/download/v2.4.1/InPlayerEpisodePreview_2.4.1.2-10.11.0.zip",
+        "checksum": "fef5770ac32ed3ed10e37201d350204d",
+        "timestamp": "2026-09-21T19:39:06Z"
       },
       {
-        "version": "2.0.0.1",
-        "changelog": "- Lazy loaded data.\n- Search for related Collections/Playlists.\n- Show watch count for Seasons and Collection/Playlist groups.\n- Option to only spoiler protect unwatched episodes.\n- Limit description height and allow expanding.\n- Fixed playback sometimes starting in the wrong browser tab or device.\n- Fixed preview UI remaining visible after navigating away from playback.\n- Fixed plugin settings not applying to non-admin users.\n- Bumped frontend dependencies to their latest versions.",
+        "version": "2.4.1.1",
+        "changelog": "TV edition: Down opens episode browsing, Left/Right crosses season boundaries and wraps around the show, Up/Back closes, and OK plays or resumes. Includes season and episode titles, descriptions, thumbnails, and the original player button for non-TV layouts. Based on Namo2/InPlayerEpisodePreview.",
         "targetAbi": "10.10.7",
-        "sourceUrl": "https://github.com/Namo2/InPlayerEpisodePreview/releases/download/v2.0.0/InPlayerEpisodePreview_2.0.0.1-10.10.7.zip",
-        "checksum": "34a2011bf57b5be56e37b876063d1ba6",
-        "timestamp": "2026-08-17T19:35:23Z"
-      },
-      {
-        "version": "1.6.1.2",
-        "changelog": "- Fixed a bug where movies with multiple versions were treated as collections",
-        "targetAbi": "10.11.0",
-        "sourceUrl": "https://github.com/Namo2/InPlayerEpisodePreview/releases/download/v1.6.1/InPlayerEpisodePreview_1.6.1.2-10.11.0.zip",
-        "checksum": "94d14a0a95bb3d5d76342ac4e00a26d0",
-        "timestamp": "2025-12-11T21:37:25Z"
-      },
-      {
-        "version": "1.6.1.1",
-        "changelog": "- Fixed a bug where movies with multiple versions were treated as collections",
-        "targetAbi": "10.10.7",
-        "sourceUrl": "https://github.com/Namo2/InPlayerEpisodePreview/releases/download/v1.6.1/InPlayerEpisodePreview_1.6.1.1-10.10.7.zip",
-        "checksum": "cabf84f319b9ad746f63aaca4ba86060",
-        "timestamp": "2025-12-11T21:35:23Z"
-      },
-      {
-        "version": "1.6.0.0",
-        "changelog": "- Correctly apply blur to episode thumbnail/description.\n - Show preview for movie collections when Movie type was disabled but not the Collection type.",
-        "targetAbi": "10.11.0",
-        "sourceUrl": "https://github.com/Namo2/InPlayerEpisodePreview/releases/download/v1.6.0.0/InPlayerEpisodePreview_1.6.0.0-10.11.0.zip",
-        "checksum": "dea029dae14405b3ea8b7f6153a5bd26",
-        "timestamp": "2025-11-30T15:13:10Z"
-      },
-      {
-        "version": "1.6.0.0",
-        "changelog": "- Correctly apply blur to episode thumbnail/description.\n - Show preview for movie collections when Movie type was disabled but not the Collection type.",
-        "targetAbi": "10.10.7",
-        "sourceUrl": "https://github.com/Namo2/InPlayerEpisodePreview/releases/download/v1.6.0.0/InPlayerEpisodePreview_1.6.0.0-10.10.7.zip",
-        "checksum": "abbf297fffc0e96c1b456e3e389dd6dd",
-        "timestamp": "2025-11-30T15:08:16Z"
-      },
-      {
-        "version": "1.5.0.0",
-        "changelog": "- Internal URL handling, resolves certain issues for other plugins like Meilisearch.\n - The first set of plugin settings are here. You will now be able to hide the preview button for movies.",
-        "targetAbi": "10.11.0",
-        "sourceUrl": "https://github.com/Namo2/InPlayerEpisodePreview/releases/download/v1.5.0.0/InPlayerEpisodePreview_1.5.0.0.zip",
-        "checksum": "64db631eb94d37a7ed3da1c1a01f5251",
-        "timestamp": "2025-11-09T20:15:37Z"
-      },
-      {
-        "version": "1.4.3.0",
-        "changelog": "- Starting a new episode will only start the stream on the current device\n - Playtime should now show correct values for all episodes",
-        "targetAbi": "10.11.0",
-        "sourceUrl": "https://github.com/Namo2/InPlayerEpisodePreview/releases/download/v1.4.3.0/InPlayerEpisodePreview_1.4.3.0.zip",
-        "checksum": "478bc6a21477089b56ba2d9a2eaf63ed",
-        "timestamp": "2025-10-26T18:18:47Z"
-      },
-      {
-        "version": "1.4.2.0",
-        "changelog": "load all episodes correctly",
-        "targetAbi": "10.11.0",
-        "sourceUrl": "https://github.com/Namo2/InPlayerEpisodePreview/releases/download/v1.4.2.0/InPlayerEpisodePreview_1.4.2.0.zip",
-        "checksum": "1844e25ed62f5d692324c4f6d07d4793",
-        "timestamp": "2025-10-23T19:35:40Z"
-      },
-      {
-        "version": "1.4.1.0",
-        "changelog": "minimize info logs",
-        "targetAbi": "10.11.0",
-        "sourceUrl": "https://github.com/Namo2/InPlayerEpisodePreview/releases/download/v1.4.1.0/InPlayerEpisodePreview_1.4.1.0.zip",
-        "checksum": "f884d2c10090f7f84aaab80e594b8a54",
-        "timestamp": "2025-10-21T18:02:32Z"
-      },
-      {
-        "version": "1.4.0.0",
-        "changelog": "✨ 10.11.0 Release Update",
-        "targetAbi": "10.11.0.0",
-        "sourceUrl": "https://github.com/Namo2/InPlayerEpisodePreview/releases/download/v.1.4.0.0/InPlayerEpisodePreview_1.4.0.0.zip",
-        "checksum": "31994b6d03a308fcde8b472e41072842",
-        "timestamp": "2025-10-20T21:12:38Z"
-      },
-      {
-        "version": "1.3.2.0",
-        "changelog": "FileTransformation support for 10.10.7",
-        "targetAbi": "10.10.0.0",
-        "sourceUrl": "https://github.com/Namo2/InPlayerEpisodePreview/releases/download/v1.3.2.0/InPlayerEpisodePreview_1.3.2.0.zip",
-        "checksum": "601bbb7ab1c9a2e4c48a8bab1c64adb2",
-        "timestamp": "2025-10-31T09:40:18Z"
-      },
-      {
-        "version": "1.3.1.0",
-        "changelog": "Fixes issues with the new Jellyfin 10.10.0 release",
-        "targetAbi": "10.10.0.0",
-        "sourceUrl": "https://github.com/Namo2/InPlayerEpisodePreview/releases/download/v1.3.1.0/InPlayerEpisodePreview-1.3.1.0-server.zip",
-        "checksum": "d47bf5f61c4e6abf7d1498cdff91874c",
-        "timestamp": "2024-10-26T18:34:00Z"
-      },
-      {
-        "version": "1.3.0.0",
-        "changelog": "Changes for Jellyfin 10.10.0. Added collection support + a few fixes",
-        "targetAbi": "10.10.0.0",
-        "sourceUrl": "https://github.com/Namo2/InPlayerEpisodePreview/releases/download/v1.3.0.0/InPlayerEpisodePreview-1.3.0.0-server.zip",
-        "checksum": "21e3583d4bb83f3bf61590d0b9dff2d6",
-        "timestamp": "2024-10-26T12:56:00Z"
-      },
-      {
-        "version": "1.2.4.0",
-        "changelog": "Fixed image loading with subpaths",
-        "targetAbi": "10.9.11.0",
-        "sourceUrl": "https://github.com/Namo2/InPlayerEpisodePreview/releases/download/v1.2.4.0/InPlayerEpisodePreview-1.2.4.0-server.zip",
-        "checksum": "93daf6047501fb461984f6a50862e0ca",
-        "timestamp": "2024-09-24T17:31:00Z"
-      },
-      {
-        "version": "1.2.3.1",
-        "changelog": "Fixed version tag in settings",
-        "targetAbi": "10.9.11.0",
-        "sourceUrl": "https://github.com/Namo2/InPlayerEpisodePreview/releases/download/v1.2.3.1/InPlayerEpisodePreview-1.2.3.1-server.zip",
-        "checksum": "5052e834df8196e0e4d3fe20a77496aa",
-        "timestamp": "2024-09-10T17:55:00Z"
-      },
-      {
-        "version": "1.2.3.0",
-        "changelog": "Reduced data usage",
-        "targetAbi": "10.9.11.0",
-        "sourceUrl": "https://github.com/Namo2/InPlayerEpisodePreview/releases/download/v1.2.3.0/InPlayerEpisodePreview-1.2.3.0-server.zip",
-        "checksum": "d10583f352e58178b01ca7ca07b98bc6",
-        "timestamp": "2024-09-10T17:38:00Z"
-      },
-      {
-        "version": "1.2.2.0",
-        "changelog": "Security Updates, Fix for server discovery, fix for icon color on hover",
-        "targetAbi": "10.9.10.0",
-        "sourceUrl": "https://github.com/Namo2/InPlayerEpisodePreview/releases/download/v1.2.2.0/InPlayerEpisodePreview-1.2.2.0-server.zip",
-        "checksum": "d13482cdc15ab6a48a8daef66f4cfe62",
-        "timestamp": "2024-09-07T20:00:00Z"
-      },
-      {
-        "version": "1.2.1.0",
-        "changelog": "Episode details",
-        "targetAbi": "10.9.6.0",
-        "sourceUrl": "https://github.com/Namo2/InPlayerEpisodePreview/releases/download/v1.2.1.0/InPlayerEpisodePreview-1.2.1.0-server.zip",
-        "checksum": "31A0659C681749C01184E7188289F080",
-        "timestamp": "2024-06-20T10:10:00Z"
-      },
-      {
-        "version": "1.2.0.1",
-        "changelog": "Security Updates",
-        "targetAbi": "10.9.0.0",
-        "sourceUrl": "https://github.com/Namo2/InPlayerEpisodePreview/releases/download/v1.2.0.1/InPlayerEpisodePreview-1.2.0.1-server.zip",
-        "checksum": "e596d2e6e6e9a42a27068295d5f16e96",
-        "timestamp": "2024-06-14T01:59:00Z"
-      },
-      {
-        "version": "1.2.0.0",
-        "changelog": "Changes for Jellyfin Media Player 1.11.0",
-        "targetAbi": "10.9.0.0",
-        "sourceUrl": "https://github.com/Namo2/InPlayerEpisodePreview/releases/download/v1.2.0.0/InPlayerEpisodePreview-1.2.0.0-server.zip",
-        "checksum": "07ff1f4009b6e3a860ff0fd35e6649aa",
-        "timestamp": "2024-06-14T01:38:00Z"
-      },
-      {
-        "version": "1.1.0.0",
-        "changelog": "Changes for Jellyfin 10.9.0",
-        "targetAbi": "10.9.0.0",
-        "sourceUrl": "https://github.com/Namo2/InPlayerEpisodePreview/releases/download/v1.1.0.0/inPlayerEpisodePreview-1.1.0.0-server.zip",
-        "checksum": "6e77b2b3bd6d5a3ea85daa75e7a230de",
-        "timestamp": "2024-05-12T20:23:00Z"
-      },
-      {
-        "version": "1.0.1.0",
-        "changelog": "Retries + Settings Page",
-        "targetAbi": "10.8.13.0",
-        "sourceUrl": "https://github.com/Namo2/InPlayerEpisodePreview/releases/download/v1.0.1.0/inPlayerEpisodePreview-1.0.1.0-server.zip",
-        "checksum": "2928263ae600f0a31626305a88514d8f",
-        "timestamp": "2024-02-24T11:37:00Z"
-      },
-      {
-        "version": "1.0.0.0",
-        "changelog": "Initial release",
-        "targetAbi": "10.8.13.0",
-        "sourceUrl": "https://github.com/Namo2/InPlayerEpisodePreview/releases/download/v1.0.0.0/InPlayerEpisodePreview-v1.0.0.0-server.zip",
-        "checksum": "8679e9d1c3e4c3bd5039c81a1ad07c6e",
-        "timestamp": "2023-12-17T10:33:00Z"
+        "sourceUrl": "https://github.com/jampez77/InPlayerEpisodePreview-TV/releases/download/v2.4.1/InPlayerEpisodePreview_2.4.1.1-10.10.7.zip",
+        "checksum": "5f266629cb13317508a9fc42231b0db0",
+        "timestamp": "2026-09-21T19:39:06Z"
       }
     ]
   }
