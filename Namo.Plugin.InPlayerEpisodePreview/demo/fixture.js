@@ -66,7 +66,10 @@
         ] : [],
         media: 'episode', layout: 'tv',
         delayMs: 0, failPlay: false, failLoad: false, ready: false,
-        nativeChannelPlayback: params.get('native-playback') === '1', ignorePlay: false, stallPlay: false, channelTuneDelayMs: 0,
+        nativePlayback: params.get('native-playback') === '1', ignorePlay: false, stallPlay: false,
+        playbackDelayMs: 0, channelTuneDelayMs: 0,
+        get nativeChannelPlayback() { return this.nativePlayback; },
+        set nativeChannelPlayback(enabled) { this.nativePlayback = enabled; },
         async wait() {
             if (this.delayMs) await new Promise(resolve => setTimeout(resolve, this.delayMs));
             if (this.failLoad) throw new Error('Synthetic media load failure');
@@ -139,17 +142,18 @@
     document.createElement = function (tagName, options) {
         if (tagName === 'div' && options === 'emby-itemscontainer') {
             const container = createElement.call(this, tagName);
-            if (demo.nativeChannelPlayback) {
+            if (demo.nativePlayback) {
                 container.attachedCallback = function () {};
                 container.addEventListener('command', event => {
                     if (!container.isConnected || event.detail?.command !== 'play') return;
                     const item = event.target.closest('[data-id]');
-                    if (!item || item.dataset.type !== 'TvChannel' || item.dataset.serverid !== 'demo-server') return;
+                    if (!item || !['Episode', 'Movie', 'TvChannel'].includes(item.dataset.type) || item.dataset.serverid !== 'demo-server') return;
                     demo.nativePlayRequests.push({itemId: item.dataset.id, ticks: Number(item.dataset.positionticks),
                         serverId: item.dataset.serverid, type: item.dataset.type, mediaType: item.dataset.mediatype});
                     event.preventDefault();
                     event.stopPropagation();
-                    if (!demo.ignorePlay) setTimeout(() => demo.setPlaying(item.dataset.id), demo.channelTuneDelayMs);
+                    const delayMs = item.dataset.type === 'TvChannel' ? demo.channelTuneDelayMs : demo.playbackDelayMs;
+                    if (!demo.ignorePlay) setTimeout(() => demo.setPlaying(item.dataset.id), delayMs);
                 });
             }
             return container;
@@ -268,8 +272,9 @@
                 // A session command can be accepted even if the client never
                 // receives it. Tests can model that independently of HTTP errors.
                 if (demo.ignorePlay) return undefined;
-                if (play[1].startsWith('channel-') && demo.channelTuneDelayMs) {
-                    setTimeout(() => demo.setPlaying(play[1]), demo.channelTuneDelayMs);
+                const delayMs = play[1].startsWith('channel-') ? demo.channelTuneDelayMs : demo.playbackDelayMs;
+                if (delayMs) {
+                    setTimeout(() => demo.setPlaying(play[1]), delayMs);
                     return undefined;
                 }
                 demo.setPlaying(play[1]);

@@ -64,7 +64,7 @@ test('an unavailable native bridge falls back to the authenticated session comma
     await legacyOk(page);
     await expect(panel(page)).toHaveCount(0);
     expect(await page.evaluate(() => window.__demo.nativePlayRequests)).toEqual([]);
-    expect(await page.evaluate(() => window.__demo.playRequests)).toEqual([{itemId: 'channel-2', ticks: 0}]);
+    await expect.poll(() => page.evaluate(() => window.__demo.playRequests)).toEqual([{itemId: 'channel-2', ticks: 0}]);
     expect(await page.evaluate(() => window.__demo.playerCommands)).toEqual([]);
     await expect(page.locator('[is="emby-itemscontainer"]')).toHaveCount(0);
 });
@@ -75,7 +75,7 @@ test('an acknowledged session command without playback stays open and offers a r
     await page.evaluate(() => { window.__demo.ignorePlay = true; });
     await page.keyboard.press('Enter');
     await expect(panel(page).getByRole('button', {name: 'Tuning channel…'})).toBeDisabled();
-    expect(await page.evaluate(() => window.__demo.playRequests)).toEqual([{itemId: 'channel-2', ticks: 0}]);
+    await expect.poll(() => page.evaluate(() => window.__demo.playRequests)).toEqual([{itemId: 'channel-2', ticks: 0}]);
     await page.clock.runFor(21000);
     await expect(watch(page)).toBeEnabled();
     await expect(panel(page).locator('.ipep-tv-announcement')).toContainText(/try again/i);
@@ -102,6 +102,42 @@ test('an accepted native command without playback times out without a second tun
     expect(await page.evaluate(() => window.__demo.playRequests)).toEqual([]);
     expect(await page.evaluate(() => window.__demo.playingItemId)).toBe('channel-1');
     await expect(page.locator('[is="emby-itemscontainer"]')).toHaveCount(0);
+});
+
+test('an OSD metadata change alone cannot confirm a channel tune or hide its timeout', async ({page}) => {
+    await selectChannel(page);
+    await page.clock.install();
+    await page.evaluate(() => { window.__demo.ignorePlay = true; });
+    await page.keyboard.press('Enter');
+    await expect.poll(() => page.evaluate(() => window.__demo.nativePlayRequests.length)).toBe(1);
+    await page.evaluate(() => {
+        document.querySelector<HTMLElement>('.btnUserRating')!.dataset.id = 'channel-2';
+    });
+    await expect(panel(page).getByRole('button', {name: 'Tuning channel…'})).toBeDisabled();
+    expect(await page.evaluate(() => window.__demo.playingItemId)).toBe('channel-1');
+    await page.clock.runFor(21000);
+    await expect(watch(page)).toBeEnabled();
+    await expect(panel(page).locator('.ipep-tv-announcement')).toContainText(/try again/i);
+    await expect(panel(page).locator('.ipep-tv-title')).toHaveText('Frame Cinema');
+    expect(await page.evaluate(() => window.__demo.playingItemId)).toBe('channel-1');
+    expect(await page.evaluate(() => window.__demo.nativePlayRequests)).toHaveLength(1);
+    expect(await page.evaluate(() => window.__demo.playRequests)).toEqual([]);
+});
+
+test('a session playback update confirms a channel tune even when OSD metadata is unchanged', async ({page}) => {
+    await selectChannel(page);
+    await page.clock.install();
+    await page.evaluate(() => { window.__demo.ignorePlay = true; });
+    await page.keyboard.press('Enter');
+    await expect.poll(() => page.evaluate(() => window.__demo.nativePlayRequests.length)).toBe(1);
+    await expect(panel(page).getByRole('button', {name: 'Tuning channel…'})).toBeDisabled();
+    await page.evaluate(() => { window.__demo.playingItemId = 'channel-2'; });
+    await page.clock.runFor(1000);
+    await expect(panel(page)).toHaveCount(0);
+    await expect(page.locator('.btnUserRating')).toHaveAttribute('data-id', 'channel-1');
+    expect(await page.evaluate(() => window.__demo.playingItemId)).toBe('channel-2');
+    expect(await page.evaluate(() => window.__demo.nativePlayRequests)).toHaveLength(1);
+    expect(await page.evaluate(() => window.__demo.playRequests)).toEqual([]);
 });
 
 test('a stalled session request cannot leave channel tuning busy indefinitely', async ({page}) => {

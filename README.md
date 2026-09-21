@@ -53,7 +53,9 @@ Open the panel during live TV to browse the channels available to your Jellyfin 
 
 Live TV requires channels already configured and working in Jellyfin. Programme information depends on your guide data; the channel name remains visible when programme details are unavailable.
 
-Channel selection uses Jellyfin's local player action where available, including in the LG webOS app, with the authenticated session command as a fallback. The button shows **Tuning channel…** while waiting for Jellyfin to report the selected channel. If it does not start within 20 seconds, the selection stays open with a retry message. Both the remote's **OK** button and pointer clicks use this action.
+TV playback uses Jellyfin's local player action for episodes, films, and channels where available, with the authenticated session command as a fallback. Episodes and films preserve their resume position; channels start live. Both the remote's **OK** button and pointer clicks use this action.
+
+The button shows **Tuning channel…**, **Starting episode…**, or **Starting film…** until the client reports the selected item as playing. A newly started Cinema Mode pre-roll also confirms playback when its queue leads to the selected feature. A successful request, unchanged existing pre-roll, or changed player metadata alone does not close the preview. If playback is not reported within 20 seconds, the selection stays open with a retry message. **Up / Back** still closes the preview, and leaving the player cancels the wait.
 
 ![Live TV channel browser with current programme details](Images/live-tv-preview.png)
 
@@ -69,7 +71,7 @@ TV mode follows Jellyfin's **Display → Layout → TV** setting. The player but
 
 This is a **Jellyfin server plugin that extends Jellyfin Web**. The TV interface works in clients using the server's web player, including Jellyfin Media Player with the TV layout selected. It does not add a panel to independently implemented native players, such as the native Android TV player.
 
-The [official LG webOS app](https://github.com/jellyfin/jellyfin-webos) also loads the server's web interface. The TV panel uses positioning, thumbnail sizing, and spacing compatible with [webOS 6's Chromium 79 engine](https://webostv.developer.lge.com/develop/specifications/web-api-and-web-engine). If updating on an LG TV, fully close and reopen the Jellyfin app after restarting the server so it loads the updated script.
+The [official LG webOS app](https://github.com/jellyfin/jellyfin-webos) also loads the server's web interface. The TV panel uses positioning, thumbnail sizing, and spacing compatible with [webOS 6's Chromium 79 engine](https://webostv.developer.lge.com/develop/specifications/web-api-and-web-engine). Updates use a versioned script URL to prevent reuse of an older bundle. If updating on an LG TV, fully close and reopen the Jellyfin app after restarting the server so it loads the updated script.
 
 | Jellyfin server | Release package target | Build framework |
 | --- | --- | --- |

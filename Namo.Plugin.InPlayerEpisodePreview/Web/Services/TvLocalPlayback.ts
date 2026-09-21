@@ -1,15 +1,19 @@
 type ItemsContainer = HTMLDivElement & {attachedCallback?: () => void}
 
 /**
- * Uses the same local play action as Jellyfin's channel cards. The playback
+ * Uses the same local play action as Jellyfin's media cards. The playback
  * manager is bundled privately, but its registered items container owns this
- * command handler in Jellyfin Web 10.10 and 10.11.
+ * command handler in Jellyfin Web 10.10, 10.11, and 12.0.
  *
  * A handled command only confirms dispatch; callers must observe playback to
- * determine whether the tuner actually opened the channel.
+ * determine whether the player actually started the selected item.
  */
-export async function tryPlayChannelLocally(channelId: string, isCurrent: () => boolean): Promise<boolean> {
-    if (!channelId || !isCurrent() || typeof ApiClient === 'undefined' || !document.body) return false
+export async function tryPlayLocally(
+    media: {id: string, kind: 'episode' | 'movie' | 'channel'},
+    ticks: number,
+    isCurrent: () => boolean
+): Promise<boolean> {
+    if (!media.id || !isCurrent() || typeof ApiClient === 'undefined' || !document.body) return false
 
     let container: ItemsContainer | undefined
     try {
@@ -31,12 +35,12 @@ export async function tryPlayChannelLocally(channelId: string, isCurrent: () => 
 
         const item = document.createElement('div')
         item.className = 'itemAction'
-        item.setAttribute('data-id', channelId)
-        item.setAttribute('data-type', 'TvChannel')
+        item.setAttribute('data-id', media.id)
+        item.setAttribute('data-type', media.kind === 'channel' ? 'TvChannel' : media.kind === 'movie' ? 'Movie' : 'Episode')
         item.setAttribute('data-mediatype', 'Video')
         item.setAttribute('data-serverid', serverId)
         item.setAttribute('data-isfolder', 'false')
-        item.setAttribute('data-positionticks', '0')
+        item.setAttribute('data-positionticks', String(media.kind === 'channel' ? 0 : ticks))
         container.appendChild(item)
         document.body.appendChild(container)
 

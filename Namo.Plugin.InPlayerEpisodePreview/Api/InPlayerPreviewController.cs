@@ -99,6 +99,7 @@ public class InPlayerPreviewController : ControllerBase
     /// <returns>The "inPlayerPreview.js" embedded file.</returns>
     [HttpGet("ClientScript")]
     [AllowAnonymous]
+    [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [Produces("application/javascript")]
@@ -174,6 +175,7 @@ public class InPlayerPreviewController : ControllerBase
     /// the following feature without inferring a relationship from a trailer's title.
     /// </summary>
     [HttpGet("PlaybackContext")]
+    [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult> GetPlaybackContext()

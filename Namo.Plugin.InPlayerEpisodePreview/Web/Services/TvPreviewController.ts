@@ -4,8 +4,8 @@ import {TvMediaDisabledError, TvMediaUnavailableError, TvMediaSource, sameMediaI
 import {PluginSettings} from '../Models/PluginSettings'
 import {Endpoints} from '../Endpoints'
 import {Logger} from './Logger'
-import {tryPlayChannelLocally} from './TvChannelPlayback'
-import {ChannelPlaybackTimeoutError, waitForChannelPlayback} from './TvChannelPlaybackConfirmation'
+import {tryPlayLocally} from './TvLocalPlayback'
+import {PlaybackTimeoutError, waitForPlayback} from './TvPlaybackConfirmation'
 
 export function isTvLayout(): boolean {
     return document.documentElement.classList.contains('layout-tv') || document.body.classList.contains('layout-tv')
@@ -32,6 +32,7 @@ export class TvPreviewController {
     private index = 0
     private nowPlayingId: string | null = null
     private playingMediaId: string | null = null
+    private playingPlaylistItemId?: string
     private upcomingItemId: string | null = null
     private leavingPlayer = false
     private previousFocus: HTMLElement | null = null
@@ -193,7 +194,7 @@ export class TvPreviewController {
         this.playerObserver = new MutationObserver(() => {
             const currentId = this.options.currentItemId()
             if (!this.isPlayerActive() || player !== this.activePlayer()
-                || (currentId && this.nowPlayingId && !sameMediaId(currentId, this.nowPlayingId))
+                || (this.state !== 'playing' && currentId && this.nowPlayingId && !sameMediaId(currentId, this.nowPlayingId))
                 || this.hasOtherDialog()) this.close(false)
         })
         this.playerObserver.observe(document.body, {
@@ -231,6 +232,7 @@ export class TvPreviewController {
             if (!this.options.enabled(result.kind)) { this.close(); return }
             this.items = result.items
             this.playingMediaId = result.playingItemId
+            this.playingPlaylistItemId = result.playingPlaylistItemId
             this.upcomingItemId = result.upcomingItemId || null
             this.index = result.activeIndex
             this.state = 'ready'
@@ -251,7 +253,7 @@ export class TvPreviewController {
     private isCurrent(generation: number): boolean {
         if (generation !== this.generation || !this.panel) return false
         const currentId = this.options.currentItemId()
-        if (!this.isPlayerActive() || (currentId && this.nowPlayingId && !sameMediaId(currentId, this.nowPlayingId))) {
+        if (!this.isPlayerActive() || (this.state !== 'playing' && currentId && this.nowPlayingId && !sameMediaId(currentId, this.nowPlayingId))) {
             this.close(false)
             return false
         }
@@ -304,29 +306,32 @@ export class TvPreviewController {
         this.playbackAbort = playbackAbort
         try {
             const ticks = episode.kind === 'channel' || episode.played ? 0 : episode.playbackPositionTicks
-            // Channel changes should originate in this client's player, without depending
+            // Selections should originate in this client's player, without depending
             // on a server-to-client WebSocket command making a round trip back to the TV.
-            const handledLocally = episode.kind === 'channel' && await tryPlayChannelLocally(episode.id,
+            const handledLocally = await tryPlayLocally(episode, ticks,
                 () => !playbackAbort.signal.aborted && this.isCurrent(generation))
             if (!this.isCurrent(generation)) return
             const sendPlayRequest = async (): Promise<void> => {
                 await ApiClient.ajax({type: 'GET', url: ApiClient.getUrl(`/${Endpoints.BASE}${Endpoints.PLAY_MEDIA}`
                     .replace('{itemId}', episode.id).replace('{ticks}', String(ticks)))})
             }
-            if (episode.kind === 'channel') {
-                // Start the deadline before the fallback request, which itself may stall.
-                // A successful HTTP response alone must never count as a successful tune.
-                const confirmation = waitForChannelPlayback(episode.id, this.options.currentItemId, playbackAbort.signal)
-                await (handledLocally ? confirmation
-                    : Promise.race([confirmation, sendPlayRequest().then(() => confirmation)]))
-            } else await sendPlayRequest()
+            // Start the deadline before the fallback request, which itself may stall.
+            // The rating button's data-id can change before playback actually starts.
+            const confirmation = waitForPlayback(episode, playbackAbort.signal, {
+                id: this.playingMediaId, playlistItemId: this.playingPlaylistItemId
+            })
+            await (handledLocally ? confirmation
+                : Promise.race([confirmation, sendPlayRequest().then(() => confirmation)]))
             if (this.isCurrent(generation)) this.close()
         } catch (error) {
             if (!this.isCurrent(generation)) return
             this.options.logger.error("Couldn't play the selected media", error)
+            // Keep the retry visible even if the host updated its metadata early.
+            // This baseline is only for view changes; it does not change the playing marker.
+            this.nowPlayingId = this.options.currentItemId() || this.nowPlayingId
             this.state = 'ready'
             this.panel?.setPlaying(false)
-            this.render(error instanceof ChannelPlaybackTimeoutError ? error.message
+            this.render(error instanceof PlaybackTimeoutError ? error.message
                 : 'Could not start playback. Press OK to try again.')
             this.panel?.focus()
         } finally {
@@ -350,6 +355,7 @@ export class TvPreviewController {
         this.items = []
         this.nowPlayingId = null
         this.playingMediaId = null
+        this.playingPlaylistItemId = undefined
         this.upcomingItemId = null
         document.documentElement.classList.remove('ipep-tv-preview-open')
         if (restoreFocus && this.isPlayerActive() && this.previousFocus?.isConnected && this.previousFocus.getClientRects().length

@@ -18,6 +18,7 @@ export type TvMediaList = {
     activeIndex: number
     kind: TvMediaKind
     playingItemId: string
+    playingPlaylistItemId?: string
     upcomingItemId?: string
 };
 
@@ -39,7 +40,7 @@ export class TvMediaUnavailableError extends Error {
 
 type MediaDto = BaseItemDto & {IsMissing?: boolean; IsVirtualItem?: boolean};
 type AvailableDto = MediaDto & {Id: string};
-type PlaybackContext = {
+export type PlaybackContext = {
     PlayingItemId?: string
     PlayingItemType?: BaseItemDto['Type']
     PlayingItemExtraType?: BaseItemDto['ExtraType']
@@ -58,8 +59,36 @@ export function sameMediaId(left?: string | null, right?: string | null): boolea
     return normalize(left) === normalize(right);
 }
 
-function isIntro(item: MediaDto): boolean {
+export function isIntro(item: MediaDto): boolean {
     return item.Type === 'Trailer' || item.Type === 'Video' || item.ExtraType === 'Trailer';
+}
+
+/** Resolve only the first feature after this exact intro's position in the reported queue. */
+export async function findUpcomingFeature(context: PlaybackContext, userId: string,
+    isCurrent: () => boolean = () => true): Promise<AvailableDto> {
+    const queue = context.Queue;
+    if (!context.PlayingItemId || !Array.isArray(queue) || !isCurrent()) throw new TvMediaUnavailableError();
+    const matches = queue.map((item, index) => ({item, index})).filter(({item}) =>
+        sameMediaId(item?.Id, context.PlayingItemId)
+        && (!context.PlaylistItemId || item.PlaylistItemId === context.PlaylistItemId));
+    if (matches.length !== 1) throw new TvMediaUnavailableError();
+    const currentIndex = matches[0].index;
+    for (let index = currentIndex + 1; index < Math.min(queue.length, currentIndex + 1 + MAX_INTRO_ITEMS); index++) {
+        const queued = queue[index];
+        if (!queued?.Id || !isCurrent()) throw new TvMediaUnavailableError();
+        let candidate: MediaDto;
+        try {
+            candidate = await ApiClient.getItem(userId, queued.Id);
+        } catch {
+            // An unknown queue entry could itself be the feature. Never skip it.
+            throw new TvMediaUnavailableError();
+        }
+        if (!isCurrent() || !candidate?.Id || !sameMediaId(candidate.Id, queued.Id)) throw new TvMediaUnavailableError();
+        if (isIntro(candidate)) continue;
+        if (candidate.Type !== 'Movie' && candidate.Type !== 'Episode') throw new TvMediaUnavailableError();
+        return candidate as AvailableDto;
+    }
+    throw new TvMediaUnavailableError();
 }
 
 function mediaKind(item: MediaDto): TvMediaKind | null {
@@ -225,35 +254,16 @@ export class TvMediaSource {
     private async loadUpcoming(itemId: string, userId: string, enabled: (kind: TvMediaKind) => boolean,
         suppliedContext?: PlaybackContext): Promise<TvMediaList> {
         const context = suppliedContext ?? await this.playbackContext(itemId);
-        const queue = context.Queue;
-        if (!Array.isArray(queue)) throw new TvMediaUnavailableError();
-        const matches = queue.map((item, index) => ({item, index})).filter(({item}) =>
-            sameMediaId(item?.Id, itemId) && (!context.PlaylistItemId || item.PlaylistItemId === context.PlaylistItemId));
-        if (matches.length !== 1) throw new TvMediaUnavailableError();
-        const currentIndex = matches[0].index;
-        for (let index = currentIndex + 1; index < Math.min(queue.length, currentIndex + 1 + MAX_INTRO_ITEMS); index++) {
-            const queued = queue[index];
-            if (!queued?.Id) throw new TvMediaUnavailableError();
-            let candidate: MediaDto;
-            try {
-                candidate = await ApiClient.getItem(userId, queued.Id);
-            } catch {
-                // An unknown queue entry could itself be the intended feature. Do not skip it.
-                throw new TvMediaUnavailableError();
-            }
-            if (!candidate?.Id || !sameMediaId(candidate.Id, queued.Id)) throw new TvMediaUnavailableError();
-            if (isIntro(candidate)) continue;
-            if (candidate.Type !== 'Movie' && candidate.Type !== 'Episode') throw new TvMediaUnavailableError();
-            try {
-                const result = await this.loadFeature(candidate, userId, enabled);
-                return {...result, playingItemId: itemId, upcomingItemId: candidate.Id};
-            } catch (error) {
-                // Intros should stay unobstructed when the upcoming details cannot be loaded.
-                if (error instanceof TvMediaDisabledError) throw error;
-                throw new TvMediaUnavailableError();
-            }
+        const candidate = await findUpcomingFeature(context, userId);
+        try {
+            const result = await this.loadFeature(candidate, userId, enabled);
+            return {...result, playingItemId: itemId, playingPlaylistItemId: context.PlaylistItemId,
+                upcomingItemId: candidate.Id};
+        } catch (error) {
+            // Intros should stay unobstructed when the upcoming details cannot be loaded.
+            if (error instanceof TvMediaDisabledError) throw error;
+            throw new TvMediaUnavailableError();
         }
-        throw new TvMediaUnavailableError();
     }
 
     private async loadMovies(current: MediaDto, userId: string): Promise<TvMediaList> {
