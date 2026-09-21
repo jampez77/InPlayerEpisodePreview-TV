@@ -9,6 +9,30 @@
     "imageUrl": "https://raw.githubusercontent.com/jampez77/InPlayerEpisodePreview-TV/main/Images/tv-logo.png",
     "versions": [
       {
+        "version": "2.5.5.3",
+        "changelog": "## Changelog\n- Close the TV preview as soon as the selected episode, film, or channel starts in the local player, without waiting for a delayed server playback report.\n- Confirm both the selected item and a new playing video source. Metadata-only changes, the old stream continuing, paused videos, and playback errors do not dismiss the preview.\n- Keep server confirmation and Cinema Mode handling as fallbacks. Local confirmation works even if the server request stalls, and all polling stops when the preview closes.\n- Added six regressions using real muted browser video streams, covering automatic closure, stale/hung reports, reopening the new item, and cancellation. Updated README and demo documentation.\n- Validation: 26 unit tests, 81 browser tests, and all three supported server builds pass.\n- For Jellyfin 12 install 2.5.5.3, restart Jellyfin, and fully close and reopen the LG app.",
+        "targetAbi": "12.0.0",
+        "sourceUrl": "https://github.com/jampez77/InPlayerEpisodePreview-TV/releases/download/v2.5.5/InPlayerEpisodePreview_2.5.5.3-12.0.0.zip",
+        "checksum": "9ee4baa577bc4cd321efea4e39f93aad",
+        "timestamp": "2026-09-21T22:30:29Z"
+      },
+      {
+        "version": "2.5.5.2",
+        "changelog": "## Changelog\n- Close the TV preview as soon as the selected episode, film, or channel starts in the local player, without waiting for a delayed server playback report.\n- Confirm both the selected item and a new playing video source. Metadata-only changes, the old stream continuing, paused videos, and playback errors do not dismiss the preview.\n- Keep server confirmation and Cinema Mode handling as fallbacks. Local confirmation works even if the server request stalls, and all polling stops when the preview closes.\n- Added six regressions using real muted browser video streams, covering automatic closure, stale/hung reports, reopening the new item, and cancellation. Updated README and demo documentation.\n- Validation: 26 unit tests, 81 browser tests, and all three supported server builds pass.\n- For Jellyfin 12 install 2.5.5.3, restart Jellyfin, and fully close and reopen the LG app.",
+        "targetAbi": "10.11.0",
+        "sourceUrl": "https://github.com/jampez77/InPlayerEpisodePreview-TV/releases/download/v2.5.5/InPlayerEpisodePreview_2.5.5.2-10.11.0.zip",
+        "checksum": "7b55ff8d6d609992245751731b63456e",
+        "timestamp": "2026-09-21T22:30:29Z"
+      },
+      {
+        "version": "2.5.5.1",
+        "changelog": "## Changelog\n- Close the TV preview as soon as the selected episode, film, or channel starts in the local player, without waiting for a delayed server playback report.\n- Confirm both the selected item and a new playing video source. Metadata-only changes, the old stream continuing, paused videos, and playback errors do not dismiss the preview.\n- Keep server confirmation and Cinema Mode handling as fallbacks. Local confirmation works even if the server request stalls, and all polling stops when the preview closes.\n- Added six regressions using real muted browser video streams, covering automatic closure, stale/hung reports, reopening the new item, and cancellation. Updated README and demo documentation.\n- Validation: 26 unit tests, 81 browser tests, and all three supported server builds pass.\n- For Jellyfin 12 install 2.5.5.3, restart Jellyfin, and fully close and reopen the LG app.",
+        "targetAbi": "10.10.7",
+        "sourceUrl": "https://github.com/jampez77/InPlayerEpisodePreview-TV/releases/download/v2.5.5/InPlayerEpisodePreview_2.5.5.1-10.10.7.zip",
+        "checksum": "10950c7cb59f988fbed00887238283b0",
+        "timestamp": "2026-09-21T22:30:29Z"
+      },
+      {
         "version": "2.5.4.3",
         "changelog": "## Changelog\n- Episodes and films now use the same local Jellyfin player action as live channels, preserving resume positions. The previous release changed only channel playback, leaving episode/film selections on the session-command path that could close after acknowledgement without playing.\n- All TV selections now wait for the authenticated client playback report. An early player metadata change alone cannot dismiss the preview; failed or ignored actions retain the selection and offer a retry after 20 seconds.\n- Cinema Mode is supported: a newly started intro confirms playback only when its exact queue position leads to the selected feature. Unchanged intros and unrelated queued features do not count.\n- Version the injected script URL and disable caching of client scripts and playback reports to prevent stale update code or confirmation data.\n- Verified the local playback contract against official Jellyfin Web v12.0. Validation: 26 unit tests, 75 browser tests, and server builds for 10.10.7, 10.11.x, and 12.x pass. Physical LG playback still needs a retest.\n- Jellyfin 12 users should install version 2.5.4.3, restart Jellyfin, and fully close and reopen the LG app. README and demo updated.",
         "targetAbi": "12.0.0",
