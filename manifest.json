@@ -9,6 +9,30 @@
     "imageUrl": "https://raw.githubusercontent.com/jampez77/InPlayerEpisodePreview-TV/main/Images/tv-logo.png",
     "versions": [
       {
+        "version": "2.5.2.3",
+        "changelog": "## Changelog\n- Fix the TV preview rendering below the screen on webOS 6 / Chromium 79: use explicit screen-edge positions instead of unsupported CSS inset.\n- Preserve 16:9 thumbnails and control spacing without CSS aspect-ratio or flex gap; add compatible button and text-wrapping fallbacks.\n- Add a regression test that simulates webOS 6 CSS limitations and numeric Down/Left/Right/Up remote events. The old bundle fails the on-screen positioning check; this release passes.\n- Update the README and public demo. Verified with 26 unit tests, 54 browser tests, and builds for all three supported Jellyfin server targets.\n\nAfter updating, restart Jellyfin and fully close and reopen the LG Jellyfin app. Physical TV verification remains outstanding.",
+        "targetAbi": "12.0.0",
+        "sourceUrl": "https://github.com/jampez77/InPlayerEpisodePreview-TV/releases/download/v2.5.2/InPlayerEpisodePreview_2.5.2.3-12.0.0.zip",
+        "checksum": "709067ebdcf234b1000c8d0e0704d4cd",
+        "timestamp": "2026-09-21T21:24:55Z"
+      },
+      {
+        "version": "2.5.2.2",
+        "changelog": "## Changelog\n- Fix the TV preview rendering below the screen on webOS 6 / Chromium 79: use explicit screen-edge positions instead of unsupported CSS inset.\n- Preserve 16:9 thumbnails and control spacing without CSS aspect-ratio or flex gap; add compatible button and text-wrapping fallbacks.\n- Add a regression test that simulates webOS 6 CSS limitations and numeric Down/Left/Right/Up remote events. The old bundle fails the on-screen positioning check; this release passes.\n- Update the README and public demo. Verified with 26 unit tests, 54 browser tests, and builds for all three supported Jellyfin server targets.\n\nAfter updating, restart Jellyfin and fully close and reopen the LG Jellyfin app. Physical TV verification remains outstanding.",
+        "targetAbi": "10.11.0",
+        "sourceUrl": "https://github.com/jampez77/InPlayerEpisodePreview-TV/releases/download/v2.5.2/InPlayerEpisodePreview_2.5.2.2-10.11.0.zip",
+        "checksum": "ab28d9f59ed4b7d8aaf8c2c50b0ad0e4",
+        "timestamp": "2026-09-21T21:24:55Z"
+      },
+      {
+        "version": "2.5.2.1",
+        "changelog": "## Changelog\n- Fix the TV preview rendering below the screen on webOS 6 / Chromium 79: use explicit screen-edge positions instead of unsupported CSS inset.\n- Preserve 16:9 thumbnails and control spacing without CSS aspect-ratio or flex gap; add compatible button and text-wrapping fallbacks.\n- Add a regression test that simulates webOS 6 CSS limitations and numeric Down/Left/Right/Up remote events. The old bundle fails the on-screen positioning check; this release passes.\n- Update the README and public demo. Verified with 26 unit tests, 54 browser tests, and builds for all three supported Jellyfin server targets.\n\nAfter updating, restart Jellyfin and fully close and reopen the LG Jellyfin app. Physical TV verification remains outstanding.",
+        "targetAbi": "10.10.7",
+        "sourceUrl": "https://github.com/jampez77/InPlayerEpisodePreview-TV/releases/download/v2.5.2/InPlayerEpisodePreview_2.5.2.1-10.10.7.zip",
+        "checksum": "796a201f8a80b9adbbb92567a832b285",
+        "timestamp": "2026-09-21T21:24:55Z"
+      },
+      {
         "version": "2.5.1.3",
         "changelog": "## Changelog\n- During pre-rolls and trailers, preview the upcoming film or episode from the current device's Jellyfin playback queue, marked Up next.\n- Keep the TV panel hidden when upcoming details are unavailable, including playback-only intros and trailers without a queued feature.\n- Release preview focus, overlay state, pending requests, and held remote keys as the player exits so shared Back and Home controls can respond immediately.\n- Handle missing OSD IDs, equivalent GUID formats, and late playback reports without showing stale previews.\n- Update the README and public demo with pre-roll examples. Verified by 26 unit tests, 53 browser tests, and builds for Jellyfin 10.10.7, 10.11.x, and 12.x.\n\nThe exact reported Back/Home position shift remains unconfirmed on the affected client; this release fixes the reproduced focus and key interception issues.",
         "targetAbi": "12.0.0",
