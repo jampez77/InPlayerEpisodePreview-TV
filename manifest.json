@@ -9,6 +9,30 @@
     "imageUrl": "https://raw.githubusercontent.com/jampez77/InPlayerEpisodePreview-TV/main/Images/tv-logo.png",
     "versions": [
       {
+        "version": "2.5.3.3",
+        "changelog": "## Changelog\n- Watch channel now uses Jellyfin's local channel-card playback action when available, avoiding a server-to-TV command round trip that can silently fail on webOS clients. The authenticated session endpoint remains a fallback for clients without that action.\n- Keep Tuning channel visible until Jellyfin reports the selected channel. Accepted commands and stalled requests that never start playback offer a retry after 20 seconds.\n- Cover LG OK keycode 13, Jellyfin select commands, pointer clicks, delayed tuning, ignored commands, hung requests, and cancellation. Updated the README and demo scenarios.\n- Validation: 26 unit tests, 64 browser tests, and builds for Jellyfin 10.10.7, 10.11.x, and 12.x pass. Physical LG channel tuning still needs confirmation.\n- After updating, restart Jellyfin and fully close and reopen the LG app to load the new script.",
+        "targetAbi": "12.0.0",
+        "sourceUrl": "https://github.com/jampez77/InPlayerEpisodePreview-TV/releases/download/v2.5.3/InPlayerEpisodePreview_2.5.3.3-12.0.0.zip",
+        "checksum": "0e548b624bec3bd34f6fb6f0292cc9dd",
+        "timestamp": "2026-09-21T21:52:16Z"
+      },
+      {
+        "version": "2.5.3.2",
+        "changelog": "## Changelog\n- Watch channel now uses Jellyfin's local channel-card playback action when available, avoiding a server-to-TV command round trip that can silently fail on webOS clients. The authenticated session endpoint remains a fallback for clients without that action.\n- Keep Tuning channel visible until Jellyfin reports the selected channel. Accepted commands and stalled requests that never start playback offer a retry after 20 seconds.\n- Cover LG OK keycode 13, Jellyfin select commands, pointer clicks, delayed tuning, ignored commands, hung requests, and cancellation. Updated the README and demo scenarios.\n- Validation: 26 unit tests, 64 browser tests, and builds for Jellyfin 10.10.7, 10.11.x, and 12.x pass. Physical LG channel tuning still needs confirmation.\n- After updating, restart Jellyfin and fully close and reopen the LG app to load the new script.",
+        "targetAbi": "10.11.0",
+        "sourceUrl": "https://github.com/jampez77/InPlayerEpisodePreview-TV/releases/download/v2.5.3/InPlayerEpisodePreview_2.5.3.2-10.11.0.zip",
+        "checksum": "3f8c9807c18ec6ab704838fcb14b0a29",
+        "timestamp": "2026-09-21T21:52:16Z"
+      },
+      {
+        "version": "2.5.3.1",
+        "changelog": "## Changelog\n- Watch channel now uses Jellyfin's local channel-card playback action when available, avoiding a server-to-TV command round trip that can silently fail on webOS clients. The authenticated session endpoint remains a fallback for clients without that action.\n- Keep Tuning channel visible until Jellyfin reports the selected channel. Accepted commands and stalled requests that never start playback offer a retry after 20 seconds.\n- Cover LG OK keycode 13, Jellyfin select commands, pointer clicks, delayed tuning, ignored commands, hung requests, and cancellation. Updated the README and demo scenarios.\n- Validation: 26 unit tests, 64 browser tests, and builds for Jellyfin 10.10.7, 10.11.x, and 12.x pass. Physical LG channel tuning still needs confirmation.\n- After updating, restart Jellyfin and fully close and reopen the LG app to load the new script.",
+        "targetAbi": "10.10.7",
+        "sourceUrl": "https://github.com/jampez77/InPlayerEpisodePreview-TV/releases/download/v2.5.3/InPlayerEpisodePreview_2.5.3.1-10.10.7.zip",
+        "checksum": "44748caa502736a0d092a8a9d3cff82e",
+        "timestamp": "2026-09-21T21:52:16Z"
+      },
+      {
         "version": "2.5.2.3",
         "changelog": "## Changelog\n- Fix the TV preview rendering below the screen on webOS 6 / Chromium 79: use explicit screen-edge positions instead of unsupported CSS inset.\n- Preserve 16:9 thumbnails and control spacing without CSS aspect-ratio or flex gap; add compatible button and text-wrapping fallbacks.\n- Add a regression test that simulates webOS 6 CSS limitations and numeric Down/Left/Right/Up remote events. The old bundle fails the on-screen positioning check; this release passes.\n- Update the README and public demo. Verified with 26 unit tests, 54 browser tests, and builds for all three supported Jellyfin server targets.\n\nAfter updating, restart Jellyfin and fully close and reopen the LG Jellyfin app. Physical TV verification remains outstanding.",
         "targetAbi": "12.0.0",
