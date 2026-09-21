@@ -35,8 +35,10 @@ function episodeNumber(episode: TvEpisode): string {
 
 function seasonLabel(episode: TvEpisode): string {
     const number = episode.seasonNumber === null ? "" : `Season ${episode.seasonNumber}`;
-    const name = episode.seasonName || (episode.seasonNumber === 0 ? "Specials" : "");
-    return name && name.toLocaleLowerCase() !== number.toLocaleLowerCase()
+    const name = episode.seasonName.trim() || (episode.seasonNumber === 0 ? "Specials" : "");
+    const numberedName = /^(?:season|series|chapter)\s+(\d+)$/i.exec(name);
+    const repeatsNumber = numberedName !== null && Number(numberedName[1]) === episode.seasonNumber;
+    return name && !repeatsNumber
         ? [number, name].filter(Boolean).join(" · ") : number || name || "Season";
 }
 
@@ -71,7 +73,6 @@ export class TvEpisodePanel {
     private readonly previousLabel = node("span", "ipep-tv-neighbor-title");
     private readonly nextLabel = node("span", "ipep-tv-neighbor-title");
     private readonly playLabel = node("span", "ipep-tv-play-label", "Play episode");
-    private readonly hint = node("span", "ipep-tv-hints");
     private readonly actionsRow = node("div", "ipep-tv-actions");
     private state: "loading" | "error" | "episode" = "loading";
     private selected: TvEpisode | null = null;
@@ -95,7 +96,7 @@ export class TvEpisodePanel {
         const header = node("header", "ipep-tv-header");
         const heading = node("div", "ipep-tv-heading");
         heading.append(node("span", "ipep-tv-eyebrow", "EPISODES"), this.series);
-        this.close.append(this.icon("↑"), node("span", "", "Close"));
+        this.close.append(node("span", "", "Close"));
         header.append(heading, this.count, this.close);
 
         this.image.alt = "Episode thumbnail";
@@ -119,16 +120,15 @@ export class TvEpisodePanel {
         this.title.id = "ipep-tv-episode-title";
         this.descriptionFrame.append(this.description, this.spoilerNotice);
         this.play.append(this.icon("▶"), this.playLabel);
-        this.actionsRow.append(this.play, node("span", "ipep-tv-enter-hint", "OK to select"));
+        this.actionsRow.append(this.play);
         this.details.append(this.season, this.title, this.metadata, this.descriptionFrame, this.actionsRow);
         this.content.append(this.imageFrame, this.details);
 
         this.message.append(this.messageTitle, this.messageText);
         this.previous.append(this.icon("‹"), this.neighborText("PREVIOUS", this.previousLabel));
         this.next.append(this.neighborText("NEXT", this.nextLabel), this.icon("›"));
-        this.hint.append(this.key("←"), this.key("→"), node("span", "", "Browse"), this.key("↑"), node("span", "", "Close"));
         const footer = node("footer", "ipep-tv-footer");
-        footer.append(this.previous, this.hint, this.next);
+        footer.append(this.previous, this.next);
         this.live.setAttribute("role", "status");
         this.live.setAttribute("aria-live", "polite");
         this.live.setAttribute("aria-atomic", "true");
@@ -259,8 +259,8 @@ export class TvEpisodePanel {
         this.previous.setAttribute("aria-label", `Previous: ${seasonLabel(context.previous)}, ${episodeNumber(context.previous)}, ${context.previous.name}${context.index === 0 ? ". Wraps to the end of the show" : ""}`);
         this.next.setAttribute("aria-label", `Next: ${seasonLabel(context.next)}, ${episodeNumber(context.next)}, ${context.next.name}${context.index === context.total - 1 ? ". Wraps to the start of the show" : ""}`);
         const wrapHint = context.total <= 1 ? "The only episode in this show"
-            : context.index === 0 ? "First episode · Left wraps to the end of the show"
-                : context.index === context.total - 1 ? "Last episode · Right wraps to the start of the show" : "";
+            : context.index === 0 ? "First episode"
+                : context.index === context.total - 1 ? "Last episode" : "";
         this.announcement.textContent = context.announcement || wrapHint;
         this.live.textContent = [context.announcement, `${seasonLabel(episode)}, ${episodeNumber(episode)}: ${episode.name}.`, `${context.index + 1} of ${context.total} episodes.`, context.isPlaying ? "Currently playing." : ""].filter(Boolean).join(" ");
         this.play.hidden = false;
@@ -316,9 +316,4 @@ export class TvEpisodePanel {
         return icon;
     }
 
-    private key(text: string): HTMLElement {
-        const key = node("kbd", "ipep-tv-key", text);
-        key.setAttribute("aria-hidden", "true");
-        return key;
-    }
 }

@@ -32,6 +32,22 @@ test('TV opens with Down, identifies the playing episode, and closes with Up', a
     expect(await page.evaluate(() => window.__demo.playerCommands)).toEqual([]);
 });
 
+for (const {name, expected} of [
+    {name: 'Season 1', expected: 'Season 1 · Episode 2'},
+    {name: 'Series 1', expected: 'Season 1 · Episode 2'},
+    {name: 'Chapter 1', expected: 'Season 1 · Episode 2'},
+    {name: '  sErIeS  01  ', expected: 'Season 1 · Episode 2'},
+    {name: 'Chapter 1: Home', expected: 'Season 1 · Chapter 1: Home · Episode 2'},
+]) {
+    test(`season label avoids duplicate numbering while preserving titles: ${name}`, async ({page}) => {
+        await page.goto('/demo/index.html#/video');
+        await page.evaluate(seasonName => { window.__demo.seasons[0].Name = seasonName; }, name);
+        await page.keyboard.press('ArrowDown');
+        await expect(panel(page)).toHaveAttribute('data-state', 'episode');
+        await expect(panel(page).locator('.ipep-tv-season')).toHaveText(expected);
+    });
+}
+
 test('left and right form a continuous sequence across seasons and wrap the whole show', async ({page}) => {
     await open(page);
     await page.keyboard.press('ArrowRight');

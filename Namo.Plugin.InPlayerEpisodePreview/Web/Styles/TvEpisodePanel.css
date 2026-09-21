@@ -312,11 +312,6 @@ body.ipep-tv-preview-open [data-type="video-osd"] .videoOsdTop {
     font-size: .8em;
 }
 
-#tvEpisodePreview .ipep-tv-enter-hint {
-    color: var(--ipep-muted);
-    font-size: .78em;
-}
-
 #tvEpisodePreview .ipep-tv-announcement {
     min-height: 1.55em;
     margin: .9em 0 .45em;
@@ -326,7 +321,7 @@ body.ipep-tv-preview-open [data-type="video-osd"] .videoOsdTop {
 
 #tvEpisodePreview .ipep-tv-footer {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 1.8em;
     align-items: center;
     padding-top: .8em;
@@ -350,7 +345,7 @@ body.ipep-tv-preview-open [data-type="video-osd"] .videoOsdTop {
 }
 
 #tvEpisodePreview .ipep-tv-next {
-    grid-column: 3;
+    grid-column: 2;
     justify-content: flex-end;
     text-align: right;
 }
@@ -374,32 +369,6 @@ body.ipep-tv-preview-open [data-type="video-osd"] .videoOsdTop {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-}
-
-#tvEpisodePreview .ipep-tv-hints {
-    grid-column: 2;
-    grid-row: 1;
-    display: inline-flex;
-    gap: .45em;
-    align-items: center;
-    color: var(--ipep-muted);
-    font-size: .76em;
-}
-
-#tvEpisodePreview .ipep-tv-hints > span {
-    margin-right: .55em;
-}
-
-#tvEpisodePreview .ipep-tv-key {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 1.75em;
-    height: 1.75em;
-    border: 1px solid #536174;
-    border-radius: .3em;
-    font: inherit;
-    color: #e1e9f5;
 }
 
 #tvEpisodePreview .ipep-tv-message {
@@ -450,8 +419,6 @@ body.ipep-tv-preview-open [data-type="video-osd"] .videoOsdTop {
     #tvEpisodePreview .ipep-tv-title { font-size: 1.4em; }
     #tvEpisodePreview .ipep-tv-description { -webkit-line-clamp: 2; }
     #tvEpisodePreview .ipep-tv-footer { gap: .5em; }
-    #tvEpisodePreview .ipep-tv-hints { font-size: .65em; }
-    #tvEpisodePreview .ipep-tv-enter-hint { display: none; }
     #tvEpisodePreview .ipep-tv-playing { font-size: .65em; left: .6em; top: .6em; }
 }
 

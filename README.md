@@ -23,7 +23,7 @@ Inspired by and based on [Namo2's InPlayerEpisodePreview](https://github.com/Nam
 | **Up**, **Back**, or **Escape** | Close the browser and return to the player. |
 | **OK / Enter** | Play or resume the selected episode. Selecting the playing episode returns to it. |
 
-Each selection shows the series, season number and name, episode number and title, description, thumbnail, watch progress, and neighboring episodes. Browsing leaves playback running, and the existing spoiler-blur settings apply.
+Each selection shows the series, season number and name, episode number and title, description, thumbnail, watch progress, and neighboring episodes. Generic season names such as “Series 1” or “Chapter 1” are shown once as “Season 1”; descriptive season names are preserved. Browsing leaves playback running, and the existing spoiler-blur settings apply.
 
 Seasons form one continuous list. Moving past the final episode wraps to the first, and moving back from the first wraps to the last. An on-screen message makes the transition clear. Specials appear first as Season 0; unavailable virtual episodes are omitted. A show with one episode stays on that episode.
 

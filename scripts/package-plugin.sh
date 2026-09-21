@@ -4,10 +4,11 @@ set -euo pipefail
 repo_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 project_dir="$repo_dir/Namo.Plugin.InPlayerEpisodePreview"
 jellyfin_version="${1:-10.11.0}"
+base_version="$(sed -n 's/.*<PluginVersion>\([^<]*\)<\/PluginVersion>.*/\1/p' "$project_dir/Namo.Plugin.InPlayerEpisodePreview.csproj")"
 case "$jellyfin_version" in
-    10.10.7) framework=net8.0; plugin_version=2.4.1.1 ;;
-    10.11.*) framework=net9.0; plugin_version=2.4.1.2 ;;
-    12.*) framework=net10.0; plugin_version=2.4.1.3 ;;
+    10.10.7) framework=net8.0; plugin_version="$base_version.1" ;;
+    10.11.*) framework=net9.0; plugin_version="$base_version.2" ;;
+    12.*) framework=net10.0; plugin_version="$base_version.3" ;;
     *) echo "Supported Jellyfin targets: 10.10.7, 10.11.x, 12.x" >&2; exit 1 ;;
 esac
 
