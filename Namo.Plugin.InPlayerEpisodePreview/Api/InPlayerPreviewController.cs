@@ -169,6 +169,31 @@ public class InPlayerPreviewController : ControllerBase
     }
 
     /// <summary>
+    /// Returns only the current authenticated device's playback identity and queue.
+    /// Jellyfin Web prepends cinema intros to this queue, allowing the client to locate
+    /// the following feature without inferring a relationship from a trailer's title.
+    /// </summary>
+    [HttpGet("PlaybackContext")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult> GetPlaybackContext()
+    {
+        SessionInfo? session = await ResolveCurrentSessionAsync();
+        var playingItem = session?.NowPlayingItem;
+        if (session is null || playingItem is null || playingItem.Id == Guid.Empty)
+            return NotFound("No item currently playing for this session");
+
+        return Ok(new
+        {
+            PlayingItemId = playingItem.Id,
+            PlayingItemType = playingItem.Type,
+            PlayingItemExtraType = playingItem.ExtraType,
+            session.PlaylistItemId,
+            Queue = session.NowPlayingQueue.Select(item => new { item.Id, item.PlaylistItemId }).ToArray()
+        });
+    }
+
+    /// <summary>
     /// Resolves the session for the current request by using the AuthorizationToken from the request
     /// </summary>
     private async Task<SessionInfo?> ResolveCurrentSessionAsync()

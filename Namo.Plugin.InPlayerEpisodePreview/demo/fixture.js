@@ -40,7 +40,14 @@
         // Nonzero history intentionally exercises the live-channel zero-seek rule.
         UserData: {Played: false, IsFavorite: false, PlaybackPositionTicks: 12000000000}
     }));
-    const items = [...episodes, ...movies, ...channels];
+    const intros = [
+        {Id: 'intro-1', Name: 'A night at the pictures', Type: 'Video'},
+        {Id: 'trailer-1', Name: 'Coming soon', Type: 'Trailer', ExtraType: 'Trailer'}
+    ].map(item => ({...item, MediaType: 'Video', LocationType: 'FileSystem', ServerId: 'demo-server',
+        RunTimeTicks: 450000000, Overview: 'A fictional cinema pre-roll. The feature has not started yet.',
+        ImageTags: {Primary: 'demo-intro'}, UserData: {Played: false, PlaybackPositionTicks: 0}}));
+    const items = [...episodes, ...movies, ...channels, ...intros];
+    const featureItemId = params.get('media') === 'episode' ? 'episode-2' : 'movie-1';
     const artworkUrl = id => new URL(id.startsWith('movie-') ? 'movie-artwork.svg' : /^(channel|programme)-/.test(id) ? 'channel-artwork.svg' : 'artwork.svg', location.href).href;
     const settings = {
         EnabledItemTypes: [28, 5, 13, 35], BlurDescription: false, BlurThumbnail: false,
@@ -50,7 +57,13 @@
     };
     const clone = value => JSON.parse(JSON.stringify(value));
     const demo = window.__demo = {
-        episodes, seasons, movies, channels, settings, calls: [], playRequests: [], playerCommands: [],
+        episodes, seasons, movies, channels, intros, settings, calls: [], playRequests: [], playerCommands: [],
+        featureItemId,
+        playbackQueue: params.get('scenario') === 'preroll' ? [
+            {Id: 'intro-1', PlaylistItemId: 'queue-intro'},
+            {Id: 'trailer-1', PlaylistItemId: 'queue-trailer'},
+            {Id: featureItemId, PlaylistItemId: 'queue-feature'}
+        ] : [],
         media: 'episode', layout: 'tv',
         delayMs: 0, failPlay: false, failLoad: false, ready: false,
         async wait() {
@@ -60,17 +73,24 @@
         setPlaying(id) {
             const item = items.find(item => item.Id === id);
             if (!item) throw new Error('Unknown demo item');
+            this.playingItemId = id;
             document.querySelector('.btnUserRating').dataset.id = id;
-            const media = item.Type === 'Movie' ? 'movie' : item.Type === 'TvChannel' ? 'live-tv' : 'episode';
+            const isIntro = item.Type === 'Video' || item.Type === 'Trailer';
+            const feature = items.find(item => item.Id === this.featureItemId);
+            const mediaItem = isIntro ? feature : item;
+            const media = mediaItem.Type === 'Movie' ? 'movie' : mediaItem.Type === 'TvChannel' ? 'live-tv' : 'episode';
             this.media = media;
+            this.isIntro = isIntro;
             document.querySelector('.demo-stage').dataset.media = media;
-            document.getElementById('demo-playing-title').textContent = media === 'episode' ? 'The long way home.' : item.Name;
-            document.getElementById('demo-playing-type').textContent = media === 'movie' ? 'NOW PLAYING · A FICTIONAL FILM' : media === 'live-tv' ? 'ON AIR · A FICTIONAL CHANNEL' : 'NOW PLAYING · A FICTIONAL SERIES';
-            document.getElementById('demo-playing-name').textContent = media === 'episode'
+            document.getElementById('demo-playing-title').textContent = isIntro ? item.Name : media === 'episode' ? 'The long way home.' : item.Name;
+            document.getElementById('demo-playing-type').textContent = isIntro ? 'PRE-ROLL · A FICTIONAL INTRO' : media === 'movie' ? 'NOW PLAYING · A FICTIONAL FILM' : media === 'live-tv' ? 'ON AIR · A FICTIONAL CHANNEL' : 'NOW PLAYING · A FICTIONAL SERIES';
+            document.getElementById('demo-playing-name').textContent = isIntro
+                ? this.playbackQueue.some(queued => queued.Id === this.featureItemId) ? `Up next · ${feature.Name}` : 'No queued film or episode'
+                : media === 'episode'
                 ? `Season ${item.ParentIndexNumber} · Episode ${item.IndexNumber} · ${item.Name}`
                 : media === 'movie' ? `${item.ProductionYear} · ${item.Genres.join(' / ')}`
                 : `Channel ${item.ChannelNumber} · ${item.CurrentProgram?.Name || 'Programme information unavailable'}`;
-            document.querySelector('.demo-time').textContent = media === 'live-tv' ? '● LIVE' : media === 'movie' ? '25:00 / 108:00' : '18:42 / 48:00';
+            document.querySelector('.demo-time').textContent = isIntro ? '00:12 / 00:45' : media === 'live-tv' ? '● LIVE' : media === 'movie' ? '25:00 / 108:00' : '18:42 / 48:00';
             for (const kind of ['episode', 'movie', 'live-tv']) document.getElementById(`demo-${kind}`).setAttribute('aria-pressed', String(kind === media));
             this.updateInstructions();
         },
@@ -80,11 +100,13 @@
             const url = new URL(location.href);
             url.searchParams.set('media', media);
             url.searchParams.set('layout', media === 'episode' ? this.layout : 'tv');
+            if ((media === 'live-tv' || this.layout === 'desktop') && ['preroll', 'trailer-no-feature'].includes(url.searchParams.get('scenario'))) url.searchParams.delete('scenario');
             location.assign(url.href);
         },
         updateInstructions() {
-            const description = this.media === 'movie' ? 'Browse similar films' : this.media === 'live-tv' ? 'Browse live channels' : 'Browse this show';
-            const hint = this.layout === 'tv' ? 'Open the preview with your remote or keyboard.' : 'Use the preview button in the player controls.';
+            const hasFeature = this.playbackQueue.some(item => item.Id === this.featureItemId);
+            const description = this.isIntro ? hasFeature ? 'Preview the upcoming feature' : 'No feature to preview' : this.media === 'movie' ? 'Browse similar films' : this.media === 'live-tv' ? 'Browse live channels' : 'Browse this show';
+            const hint = this.isIntro ? hasFeature ? 'Press Down to browse while the intro keeps playing.' : 'Normal player controls stay available during this trailer.' : this.layout === 'tv' ? 'Open the preview with your remote or keyboard.' : 'Use the preview button in the player controls.';
             const instructions = document.getElementById('demo-instructions');
             instructions.replaceChildren();
             const key = document.createElement('kbd');
@@ -98,7 +120,7 @@
         },
         setLayout(layout) {
             this.layout = layout;
-            if (layout === 'desktop' && this.media !== 'episode') {
+            if (layout === 'desktop' && (this.media !== 'episode' || this.isIntro)) {
                 this.setMedia('episode');
                 return;
             }
@@ -196,7 +218,14 @@
             if (path.endsWith('/ServerSettings')) return {MinResumePct: 5, MaxResumePct: 90, MinResumeDurationSeconds: 300};
             if (path.includes('/SourceCollection/')) return undefined;
             if (path.endsWith('/PreviewItemType')) return 'Episode';
-            if (path.endsWith('/NowPlayingItem')) return document.querySelector('.btnUserRating').dataset.id;
+            if (path.endsWith('/NowPlayingItem')) return demo.playingItemId;
+            if (path.endsWith('/PlaybackContext')) {
+                await demo.wait();
+                const item = items.find(item => item.Id === demo.playingItemId);
+                return clone({PlayingItemId: item.Id, PlayingItemType: item.Type, PlayingItemExtraType: item.ExtraType,
+                    PlaylistItemId: demo.playbackQueue.find(queued => queued.Id === item.Id)?.PlaylistItemId,
+                    Queue: demo.playbackQueue});
+            }
             if (path.endsWith('/PreviewData')) {
                 const item = episodes.find(episode => path.includes('/' + episode.Id + '/')) || episodes[1];
                 return {ItemType: 'Episode', ContainerName: item.SeriesName, Groups: seasons.map(group), ActiveGroupId: item.SeasonId, ActiveItemIndex: item.IndexNumber - 1};
@@ -229,7 +258,10 @@
     document.getElementById('demo-tv').addEventListener('click', () => demo.setLayout('tv'));
     document.getElementById('demo-desktop').addEventListener('click', () => demo.setLayout('desktop'));
     for (const media of ['episode', 'movie', 'live-tv']) document.getElementById(`demo-${media}`).addEventListener('click', () => demo.setMedia(media));
-    demo.setPlaying(params.get('layout') === 'desktop' ? 'episode-2' : params.get('media') === 'movie' ? 'movie-1' : params.get('media') === 'live-tv' ? 'channel-1' : 'episode-2');
+    demo.setPlaying(params.get('layout') === 'desktop' ? 'episode-2'
+        : params.get('scenario') === 'preroll' ? 'intro-1'
+        : params.get('scenario') === 'trailer-no-feature' ? 'trailer-1'
+        : params.get('media') === 'movie' ? 'movie-1' : params.get('media') === 'live-tv' ? 'channel-1' : 'episode-2');
     demo.setLayout(params.get('layout') === 'desktop' ? 'desktop' : 'tv');
     demo.ready = true;
 })();

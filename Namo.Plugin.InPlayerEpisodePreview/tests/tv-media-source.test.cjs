@@ -12,6 +12,10 @@ function compile(file) {
 }
 const episodeSource = compile('TvEpisodeSource');
 const mediaSource = compile('TvMediaSource');
+const endpointContext = {exports: {}};
+vm.runInNewContext(ts.transpileModule(readFileSync(path.join(__dirname, '../Web/Endpoints.ts'), 'utf8'), {
+    compilerOptions: {module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2017}
+}).outputText, endpointContext);
 
 function movie(id, extra = {}) {
     return {Id: id, Name: id, Type: 'Movie', LocationType: 'FileSystem', ...extra};
@@ -28,11 +32,14 @@ function setup(overrides = {}) {
         getEpisodes: async () => ({Items: [], TotalRecordCount: 0}),
         getSeasons: async () => ({Items: []}),
         getImageUrl: (id, options) => `image://${id}/${options.type}/${options.tag}`,
+        getUrl: route => `https://jellyfin.invalid${route}`,
+        ajax: async () => ({PlayingItemId: 'current', PlayingItemType: 'Movie', Queue: []}),
         ...overrides
     };
     const episodeContext = {exports: {}, ApiClient: api};
     vm.runInNewContext(episodeSource, episodeContext);
     const context = {exports: {}, ApiClient: api, require: id => {
+        if (id === '../Endpoints') return endpointContext.exports;
         assert.equal(id, './TvEpisodeSource');
         return episodeContext.exports;
     }};
@@ -207,11 +214,10 @@ test('disabled media types stop after identification before any secondary API re
     assert.deepEqual(enabledKinds, ['movie']);
 });
 
-test('rejects missing, unsupported, inaccessible, and malformed items with actionable errors', async () => {
+test('rejects missing, inaccessible, and malformed supported items with actionable errors', async () => {
     const cases = [
         [{getCurrentUserId: () => ''}, /Sign in/],
         [{getItem: async () => null}, /playing item/],
-        [{getItem: async () => ({Id: 'music', Type: 'Audio'})}, /TV episode, film, or live TV/],
         [{getItem: async () => movie('current', {PlayAccess: 'None'})}, /film is unavailable/],
         [{getItem: async () => ({Id: 'programme', Type: 'Program'})}, /no live channel/],
         [{getItem: async () => ({Id: 'programme', Type: 'Program', ChannelId: 'bad'})}, /channel is unavailable/],
@@ -255,4 +261,137 @@ test('rejects repeated or incomplete channel pages instead of presenting false w
     })});
     await assert.rejects(new TvMediaSource().load('current'), /exceeded the browsing limit/);
     assert.equal(calls, 100);
+});
+
+test('cinema trailers and generic intros preview the following queued feature without claiming it is playing', async () => {
+    for (const intro of [{Id: 'intro', Type: 'Video'}, {Id: 'intro', Type: 'Trailer'},
+        movie('intro', {ExtraType: 'Trailer'})]) {
+        const items = [intro, {Id: 'trailer', Type: 'Trailer'}, movie('feature', {Name: 'Upcoming feature'})];
+        const calls = [];
+        const {TvMediaSource} = setup({
+            getItem: async (userId, id) => {
+                calls.push(['item', userId, id]);
+                return items.find(item => item.Id === id);
+            },
+            ajax: async request => {
+                calls.push(['context', request]);
+                return {PlayingItemId: 'intro', PlayingItemType: intro.Type, PlaylistItemId: 'slot-0',
+                    Queue: items.map((item, index) => ({Id: item.Id, PlaylistItemId: `slot-${index}`}))};
+            }
+        });
+        const result = await new TvMediaSource().load('intro');
+        assert.equal(result.playingItemId, 'intro');
+        assert.equal(result.upcomingItemId, 'feature');
+        assert.equal(result.items[result.activeIndex].name, 'Upcoming feature');
+        assert.equal(result.kind, 'movie');
+        assert.equal(calls[1][1].url, 'https://jellyfin.invalid/InPlayerPreview/PlaybackContext');
+        assert.equal(calls[1][1].type, 'GET');
+        assert.deepEqual(calls.filter(call => call[0] === 'item').map(call => call[2]), ['intro', 'trailer', 'feature']);
+    }
+});
+
+test('an upcoming episode retains complete-show browsing and settings apply to the resolved feature', async () => {
+    const episode = {Id: 'episode', Type: 'Episode', SeriesId: 'show', IndexNumber: 1, ParentIndexNumber: 1};
+    const overrides = {
+        getItem: async (userId, id) => id === 'intro' ? {Id: 'intro', Type: 'Video'} : episode,
+        getEpisodes: async () => ({Items: [episode, {...episode, Id: 'next', IndexNumber: 2}], TotalRecordCount: 2}),
+        ajax: async () => ({PlayingItemId: 'intro', Queue: [{Id: 'intro'}, {Id: 'episode'}]})
+    };
+    const enabled = setup(overrides);
+    const result = await new enabled.TvMediaSource().load('intro');
+    assert.equal(result.kind, 'episode');
+    assert.equal(result.upcomingItemId, 'episode');
+    assert.equal(result.items.length, 2);
+    const disabled = setup(overrides);
+    await assert.rejects(new disabled.TvMediaSource().load('intro', kind => kind !== 'episode'),
+        error => error instanceof disabled.TvMediaDisabledError);
+});
+
+test('playback-only intros can use the authenticated session type when their library item is missing', async () => {
+    const {TvMediaSource} = setup({
+        getItem: async (userId, id) => {
+            if (id === 'intro') throw {status: 404};
+            return movie('feature');
+        },
+        ajax: async () => ({PlayingItemId: 'intro', PlayingItemType: 'Video',
+            Queue: [{Id: 'intro'}, {Id: 'feature'}]})
+    });
+    const result = await new TvMediaSource().load('intro');
+    assert.equal(result.upcomingItemId, 'feature');
+    assert.equal(result.playingItemId, 'intro');
+});
+
+test('queue matching normalizes GUID formatting and uses playlist identity to disambiguate repeated intros', async () => {
+    const rawId = 'AABBCCDD11223344556677889900AABB';
+    const dtoId = 'aabbccdd-1122-3344-5566-77889900aabb';
+    const {TvMediaSource} = setup({
+        getItem: async (userId, id) => id === rawId ? {Id: dtoId, Type: 'Trailer'} : movie(id),
+        ajax: async () => ({PlayingItemId: dtoId, PlaylistItemId: 'second', Queue: [
+            {Id: dtoId, PlaylistItemId: 'first'}, {Id: 'wrong-feature'},
+            {Id: dtoId, PlaylistItemId: 'second'}, {Id: 'right-feature'}]})
+    });
+    const result = await new TvMediaSource().load(rawId);
+    assert.equal(result.playingItemId, rawId);
+    assert.equal(result.upcomingItemId, 'right-feature');
+});
+
+test('unsupported or ambiguous playback stays silent instead of guessing an upcoming film', async () => {
+    const intro = {Id: 'intro', Type: 'Trailer'};
+    const context = {PlayingItemId: 'intro', PlayingItemType: 'Trailer', Queue: [{Id: 'intro'}, {Id: 'feature'}]};
+    const cases = [
+        {getItem: async () => ({Id: 'intro', Type: 'Audio'})},
+        {getItem: async () => ({Id: 'other-intro', Type: 'Trailer'})},
+        {ajax: async () => ({...context, PlayingItemId: 'old-intro'})},
+        {ajax: async () => ({...context, Queue: []})},
+        {ajax: async () => ({...context, Queue: [{Id: 'intro'}]})},
+        {ajax: async () => ({...context, Queue: [{Id: 'intro'}, {Id: 'feature'}, {Id: 'intro'}]})},
+        {ajax: async () => ({...context, PlaylistItemId: 'missing-slot'})},
+        {ajax: async () => {throw {status: 404};}},
+        {getItem: async (userId, id) => id === 'intro' ? intro : {Id: 'feature', Type: 'Audio'}},
+        {getItem: async (userId, id) => id === 'intro' ? intro : null},
+        {getItem: async (userId, id) => id === 'intro' ? intro : movie('wrong-id')},
+        {getItem: async (userId, id) => {if (id === 'intro') return intro; throw {status: 403};}},
+        {getItem: async () => {throw {status: 404};}, ajax: async () => ({...context, PlayingItemType: undefined})}
+    ];
+    for (const overrides of cases) {
+        const {TvMediaSource, TvMediaUnavailableError} = setup({
+            getItem: async (userId, id) => id === 'intro' ? intro : movie(id),
+            ajax: async () => context, ...overrides
+        });
+        await assert.rejects(new TvMediaSource().load('intro'), error => error instanceof TvMediaUnavailableError);
+    }
+});
+
+test('missing intermediate queue items are not skipped and intro searches remain bounded', async () => {
+    let lookedUp = [];
+    const missing = setup({
+        getItem: async (userId, id) => {
+            lookedUp.push(id);
+            if (id === 'intro') return {Id: 'intro', Type: 'Video'};
+            if (id === 'unknown') throw {status: 404};
+            return movie(id);
+        },
+        ajax: async () => ({PlayingItemId: 'intro', Queue: [{Id: 'intro'}, {Id: 'unknown'}, {Id: 'feature'}]})
+    });
+    await assert.rejects(new missing.TvMediaSource().load('intro'), error => error instanceof missing.TvMediaUnavailableError);
+    assert.deepEqual(lookedUp, ['intro', 'unknown']);
+    lookedUp = [];
+    const bounded = setup({
+        getItem: async (userId, id) => {lookedUp.push(id); return {Id: id, Type: 'Trailer'};},
+        ajax: async () => ({PlayingItemId: 'intro', Queue: [{Id: 'intro'},
+            ...Array.from({length: 50}, (_, index) => ({Id: `intro-${index}`})), {Id: 'feature'}]})
+    });
+    await assert.rejects(new bounded.TvMediaSource().load('intro'), error => error instanceof bounded.TvMediaUnavailableError);
+    assert.equal(lookedUp.length, 33);
+});
+
+test('unavailable upcoming details stay silent while normal feature errors remain actionable', async () => {
+    const {TvMediaSource, TvMediaUnavailableError} = setup({
+        getItem: async (userId, id) => id === 'intro' ? {Id: 'intro', Type: 'Video'} : movie(id),
+        ajax: async () => ({PlayingItemId: 'intro', Queue: [{Id: 'intro'}, {Id: 'feature'}]}),
+        getSimilarItems: async () => {throw new Error('offline');}
+    });
+    await assert.rejects(new TvMediaSource().load('intro'), error => error instanceof TvMediaUnavailableError);
+    await assert.rejects(new TvMediaSource().load('feature'), error =>
+        !(error instanceof TvMediaUnavailableError) && /load similar films/.test(error.message));
 });

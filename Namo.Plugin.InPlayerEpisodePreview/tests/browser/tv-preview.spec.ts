@@ -154,7 +154,8 @@ test('late episode data cannot reopen a panel closed by route navigation', async
     await page.goto('/demo/index.html#/video');
     await page.evaluate(() => { window.__demo.delayMs = 300; });
     await page.keyboard.press('ArrowDown');
-    await expect(panel(page)).toHaveAttribute('data-state', 'loading');
+    await expect.poll(() => page.evaluate(() => window.__demo.calls.some((call: any) => call.method === 'getItem'))).toBe(true);
+    await expect(panel(page)).toHaveCount(0);
     await page.evaluate(() => { location.hash = '/home'; });
     await expect(panel(page)).toHaveCount(0);
     // Covers both sequential getItem and episode/season requests completing after departure.
@@ -173,20 +174,21 @@ test('a stale now-playing lookup cannot replace the identity in a reopened brows
         const ajax = client.ajax;
         let calls = 0;
         client.ajax = (request: any) => {
-            if (request.url.endsWith('/NowPlayingItem')) {
+            if (request.url.endsWith('/PlaybackContext')) {
                 calls++;
                 if (calls === 1) return new Promise(resolve => { window.__demo.resolveOldPlaying = resolve; });
-                return Promise.resolve('episode-3');
+                return Promise.resolve({PlayingItemId: 'episode-3'});
             }
             return ajax(request);
         };
     });
     await page.keyboard.press('ArrowDown');
-    await expect(panel(page)).toHaveAttribute('data-state', 'loading');
+    await expect.poll(() => page.evaluate(() => typeof window.__demo.resolveOldPlaying)).toBe('function');
+    await expect(panel(page)).toHaveCount(0);
     await page.keyboard.press('ArrowUp');
     await page.keyboard.press('ArrowDown');
     await expect(title(page)).toHaveText('Across the Quiet Water');
-    await page.evaluate(() => window.__demo.resolveOldPlaying('episode-2'));
+    await page.evaluate(() => window.__demo.resolveOldPlaying({PlayingItemId: 'episode-2'}));
     await page.keyboard.press('ArrowLeft');
     await expect(title(page)).toHaveText('The Glass Station');
     await expect(panel(page).getByText('Currently playing', {exact: true})).toBeHidden();

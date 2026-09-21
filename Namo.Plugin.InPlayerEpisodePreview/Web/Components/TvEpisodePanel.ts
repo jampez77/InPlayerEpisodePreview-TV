@@ -15,6 +15,7 @@ type EpisodeContext = {
     index: number;
     total: number;
     isPlaying: boolean;
+    isUpcoming?: boolean;
     announcement?: string;
     blurThumbnail?: boolean;
     blurDescription?: boolean;
@@ -273,7 +274,8 @@ export class TvEpisodePanel {
         } else {
             this.image.removeAttribute("src");
         }
-        this.playing.hidden = !context.isPlaying;
+        this.playing.textContent = context.isUpcoming ? "Up next" : "Currently playing";
+        this.playing.hidden = !context.isPlaying && !context.isUpcoming;
         const minutes = Math.round(episode.runtimeTicks / 600000000);
         this.metadata.textContent = isChannel ? (episode.programName ? programmeTime(episode) : "Live TV") : [
             isMovie ? episode.officialRating || "" : "",
@@ -295,10 +297,10 @@ export class TvEpisodePanel {
         this.previous.setAttribute("aria-label", `Previous: ${positionLabel(context.previous)}, ${context.previous.name}${context.index === 0 ? `. Wraps to the end of the ${collection}` : ""}`);
         this.next.setAttribute("aria-label", `Next: ${positionLabel(context.next)}, ${context.next.name}${context.index === context.total - 1 ? `. Wraps to the start of the ${collection}` : ""}`);
         const wrapHint = context.total <= 1 ? (isMovie ? "No similar films found" : isChannel ? "The only available channel" : "The only episode in this show")
-            : context.index === 0 ? (isMovie ? "Current film" : `First ${singular}`)
+            : context.index === 0 ? (isMovie ? context.isUpcoming ? "Upcoming film" : "Current film" : `First ${singular}`)
                 : context.index === context.total - 1 ? `Last ${singular}` : "";
         this.announcement.textContent = context.announcement || wrapHint;
-        this.live.textContent = [context.announcement, `${positionLabel(episode)}: ${episode.name}.`, isChannel ? this.programme.textContent : "", `${context.index + 1} of ${context.total} ${plural}.`, context.isPlaying ? "Currently playing." : ""].filter(Boolean).join(" ");
+        this.live.textContent = [context.announcement, `${positionLabel(episode)}: ${episode.name}.`, isChannel ? this.programme.textContent : "", `${context.index + 1} of ${context.total} ${plural}.`, context.isUpcoming ? "Up next." : context.isPlaying ? "Currently playing." : ""].filter(Boolean).join(" ");
         this.play.hidden = false;
         this.updatePlayButton();
     }

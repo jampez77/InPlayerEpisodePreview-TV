@@ -1,5 +1,6 @@
 import type {BaseItemDto} from '@jellyfin/sdk/lib/generated-client';
 import {TvEpisodeSource, type TvEpisode} from './TvEpisodeSource';
+import {Endpoints} from '../Endpoints';
 
 export type TvMediaKind = 'episode' | 'movie' | 'channel';
 export type TvMediaItem = TvEpisode & {
@@ -17,6 +18,7 @@ export type TvMediaList = {
     activeIndex: number
     kind: TvMediaKind
     playingItemId: string
+    upcomingItemId?: string
 };
 
 /** Disabled media types should quietly return control to Jellyfin instead of showing a loading error. */
@@ -27,11 +29,44 @@ export class TvMediaDisabledError extends Error {
     }
 }
 
+/** Unsupported playback, including intros with no identifiable queued feature, has no preview. */
+export class TvMediaUnavailableError extends Error {
+    constructor() {
+        super('No supported feature is available to preview.');
+        this.name = 'TvMediaUnavailableError';
+    }
+}
+
 type MediaDto = BaseItemDto & {IsMissing?: boolean; IsVirtualItem?: boolean};
 type AvailableDto = MediaDto & {Id: string};
+type PlaybackContext = {
+    PlayingItemId?: string
+    PlayingItemType?: BaseItemDto['Type']
+    PlayingItemExtraType?: BaseItemDto['ExtraType']
+    PlaylistItemId?: string
+    Queue?: {Id?: string; PlaylistItemId?: string}[]
+};
 const SIMILAR_LIMIT = 30;
 const CHANNEL_PAGE_SIZE = 200;
 const MAX_CHANNEL_PAGES = 100;
+const MAX_INTRO_ITEMS = 32;
+
+export function sameMediaId(left?: string | null, right?: string | null): boolean {
+    if (typeof left !== 'string' || typeof right !== 'string' || !left || !right) return false;
+    const normalize = (id: string): string => /^[\da-f]{32}$|^[\da-f]{8}(?:-[\da-f]{4}){3}-[\da-f]{12}$/i.test(id)
+        ? id.replace(/-/g, '').toLowerCase() : id;
+    return normalize(left) === normalize(right);
+}
+
+function isIntro(item: MediaDto): boolean {
+    return item.Type === 'Trailer' || item.Type === 'Video' || item.ExtraType === 'Trailer';
+}
+
+function mediaKind(item: MediaDto): TvMediaKind | null {
+    if (isIntro(item)) return null;
+    return item.Type === 'Episode' ? 'episode' : item.Type === 'Movie' ? 'movie'
+        : item.Type === 'TvChannel' || item.Type === 'Program' ? 'channel' : null;
+}
 
 function available(item: MediaDto, type: 'Movie' | 'TvChannel'): item is AvailableDto {
     if (!item?.Id || item.Type !== type || item.IsFolder || item.PlayAccess === 'None') return false;
@@ -124,15 +159,33 @@ export class TvMediaSource {
         try {
             current = await ApiClient.getItem(userId, itemId);
         } catch (error) {
-            throw requestError('load the playing item', error);
+            const status = (error as {status?: number; statusCode?: number})?.status
+                ?? (error as {statusCode?: number})?.statusCode;
+            if (status !== 404) throw requestError('load the playing item', error);
+            // Some intro providers create playback-only items which getItem cannot return.
+            // A confirmed ordinary feature still deserves the normal missing-item error.
+            const context = await this.playbackContext(itemId);
+            const reported: MediaDto = {Id: context.PlayingItemId, Type: context.PlayingItemType,
+                ExtraType: context.PlayingItemExtraType};
+            if (mediaKind(reported)) throw requestError('load the playing item', error);
+            if (!isIntro(reported)) throw new TvMediaUnavailableError();
+            return this.loadUpcoming(itemId, userId, enabled, context);
         }
         if (!current?.Id) throw new Error('Jellyfin did not return the playing item. Refresh Jellyfin and try again.');
-        const kind: TvMediaKind | null = current.Type === 'Episode' ? 'episode'
-            : current.Type === 'Movie' ? 'movie'
-                : current.Type === 'TvChannel' || current.Type === 'Program' ? 'channel' : null;
-        if (kind && !enabled(kind)) throw new TvMediaDisabledError();
+        if (isIntro(current)) {
+            if (!sameMediaId(current.Id, itemId)) throw new TvMediaUnavailableError();
+            return this.loadUpcoming(itemId, userId, enabled);
+        }
+        return this.loadFeature(current, userId, enabled);
+    }
+
+    private async loadFeature(current: MediaDto, userId: string,
+        enabled: (kind: TvMediaKind) => boolean): Promise<TvMediaList> {
+        const kind = mediaKind(current);
+        if (!kind) throw new TvMediaUnavailableError();
+        if (!enabled(kind)) throw new TvMediaDisabledError();
         if (current.Type === 'Episode') {
-            const result = await this.episodes.load(itemId, current);
+            const result = await this.episodes.load(current.Id, current);
             return {
                 items: result.episodes.map(episode => ({...episode, kind: 'episode'})),
                 activeIndex: result.activeIndex, kind: 'episode', playingItemId: current.Id
@@ -153,7 +206,54 @@ export class TvMediaSource {
             }
         }
         if (current.Type === 'TvChannel') return this.loadChannels(current, userId);
-        throw new Error('Browsing is available while playing a TV episode, film, or live TV channel.');
+        throw new TvMediaUnavailableError();
+    }
+
+    private async playbackContext(itemId: string): Promise<PlaybackContext> {
+        let context: PlaybackContext;
+        try {
+            context = await ApiClient.ajax({type: 'GET', dataType: 'json',
+                url: ApiClient.getUrl(`/${Endpoints.BASE}${Endpoints.PLAYBACK_CONTEXT}`)});
+        } catch {
+            throw new TvMediaUnavailableError();
+        }
+        // A late session report must never substitute a feature from an earlier playback.
+        if (!context || !sameMediaId(context.PlayingItemId, itemId)) throw new TvMediaUnavailableError();
+        return context;
+    }
+
+    private async loadUpcoming(itemId: string, userId: string, enabled: (kind: TvMediaKind) => boolean,
+        suppliedContext?: PlaybackContext): Promise<TvMediaList> {
+        const context = suppliedContext ?? await this.playbackContext(itemId);
+        const queue = context.Queue;
+        if (!Array.isArray(queue)) throw new TvMediaUnavailableError();
+        const matches = queue.map((item, index) => ({item, index})).filter(({item}) =>
+            sameMediaId(item?.Id, itemId) && (!context.PlaylistItemId || item.PlaylistItemId === context.PlaylistItemId));
+        if (matches.length !== 1) throw new TvMediaUnavailableError();
+        const currentIndex = matches[0].index;
+        for (let index = currentIndex + 1; index < Math.min(queue.length, currentIndex + 1 + MAX_INTRO_ITEMS); index++) {
+            const queued = queue[index];
+            if (!queued?.Id) throw new TvMediaUnavailableError();
+            let candidate: MediaDto;
+            try {
+                candidate = await ApiClient.getItem(userId, queued.Id);
+            } catch {
+                // An unknown queue entry could itself be the intended feature. Do not skip it.
+                throw new TvMediaUnavailableError();
+            }
+            if (!candidate?.Id || !sameMediaId(candidate.Id, queued.Id)) throw new TvMediaUnavailableError();
+            if (isIntro(candidate)) continue;
+            if (candidate.Type !== 'Movie' && candidate.Type !== 'Episode') throw new TvMediaUnavailableError();
+            try {
+                const result = await this.loadFeature(candidate, userId, enabled);
+                return {...result, playingItemId: itemId, upcomingItemId: candidate.Id};
+            } catch (error) {
+                // Intros should stay unobstructed when the upcoming details cannot be loaded.
+                if (error instanceof TvMediaDisabledError) throw error;
+                throw new TvMediaUnavailableError();
+            }
+        }
+        throw new TvMediaUnavailableError();
     }
 
     private async loadMovies(current: MediaDto, userId: string): Promise<TvMediaList> {

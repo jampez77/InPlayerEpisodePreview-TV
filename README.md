@@ -41,6 +41,12 @@ Each film shows its title, description, artwork, and available year, runtime, an
 
 ![Similar films in the TV browser](Images/movie-preview.png)
 
+### Pre-rolls and trailers
+
+During a pre-roll or trailer, the TV panel uses Jellyfin's playback queue to show the upcoming film or episode, marked **Up next**. Its artwork, description, and browsing options are the same as during the feature. Opening the panel leaves the intro playing; **OK / Enter** starts the selected feature.
+
+When Jellyfin cannot identify the upcoming feature, the panel stays hidden instead of showing an episode-loading error.
+
 ### Live TV
 
 Open the panel during live TV to browse the channels available to your Jellyfin account. Each selection identifies the channel and shows its current programme, description, and artwork when supplied by the server. Left and Right wrap through the channel list; **OK / Enter** tunes to the selected channel. Browsing alone does not change the channel.
@@ -118,7 +124,7 @@ bash scripts/package-plugin.sh 12.0.0
 
 `Web/InPlayerPreview.js` is the generated production bundle embedded in the DLL. Run `npm run build` from the project directory after editing TypeScript or CSS. For a development bundle with a separate source map, run `npx webpack --mode development`.
 
-Tests cover episode pagination and ordering, season transitions, whole-show wrapping, movies and similar recommendations, live TV channels, remote and keyboard commands, playback errors, dialog and focus handling, asynchronous cancellation, and the desktop button.
+Tests cover episode pagination and ordering, season transitions, whole-show wrapping, movies and similar recommendations, live TV channels, pre-roll playback queues, remote and keyboard commands, playback errors, player-exit focus and key cleanup, asynchronous cancellation, and the desktop button.
 
 ## Try the demo
 
@@ -127,6 +133,7 @@ No installation is needed for the [interactive browser demo](https://jampez77.gi
 - [Episodes](https://jampez77.github.io/InPlayerEpisodePreview-TV/demo/index.html#/video) — browse seasons and wrap around the show.
 - [Movies](https://jampez77.github.io/InPlayerEpisodePreview-TV/demo/index.html?media=movie#/video) — explore the current film and similar films.
 - [Live TV](https://jampez77.github.io/InPlayerEpisodePreview-TV/demo/index.html?media=live-tv#/video) — browse channels and their current programmes.
+- [Pre-roll](https://jampez77.github.io/InPlayerEpisodePreview-TV/demo/index.html?scenario=preroll#/video) — preview the upcoming film during an intro.
 - [Desktop](https://jampez77.github.io/InPlayerEpisodePreview-TV/demo/index.html?layout=desktop#/video) — use the original episode preview button.
 
 Press **Down** to open the TV panel, **Left / Right** to browse, **Up** to close, and **Enter** to select. The controls at the top switch media types and layouts.

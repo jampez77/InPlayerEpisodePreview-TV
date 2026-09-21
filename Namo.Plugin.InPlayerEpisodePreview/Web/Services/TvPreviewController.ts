@@ -1,6 +1,6 @@
 import {TvEpisodePanel} from '../Components/TvEpisodePanel'
 import {wrappedIndex} from './TvEpisodeSource'
-import {TvMediaDisabledError, TvMediaSource, type TvMediaItem, type TvMediaKind} from './TvMediaSource'
+import {TvMediaDisabledError, TvMediaUnavailableError, TvMediaSource, sameMediaId, type TvMediaItem, type TvMediaKind} from './TvMediaSource'
 import {PluginSettings} from '../Models/PluginSettings'
 import {Endpoints} from '../Endpoints'
 import {Logger} from './Logger'
@@ -30,6 +30,8 @@ export class TvPreviewController {
     private index = 0
     private nowPlayingId: string | null = null
     private playingMediaId: string | null = null
+    private upcomingItemId: string | null = null
+    private leavingPlayer = false
     private previousFocus: HTMLElement | null = null
     private state: 'closed' | 'loading' | 'ready' | 'error' | 'playing' = 'closed'
     private generation = 0
@@ -52,9 +54,11 @@ export class TvPreviewController {
         window.addEventListener('hashchange', this.onViewChange)
         window.addEventListener('blur', this.onBlur)
         document.addEventListener('viewshow', this.onViewChange)
-        document.addEventListener('viewbeforehide', this.onViewBeforeHide)
+        document.addEventListener('viewbeforehide', this.onViewBeforeHide, true)
         document.addEventListener('focusin', this.onFocus, true)
-        this.observer = new MutationObserver(this.onViewChange)
+        document.addEventListener('pointerdown', this.onPointerDown, true)
+        document.addEventListener('mousedown', this.onPointerDown, true)
+        this.observer = new MutationObserver(() => this.onViewChange())
         this.observer.observe(document.documentElement, {attributes: true, attributeFilter: ['class']})
         this.observer.observe(document.body, {attributes: true, attributeFilter: ['class']})
     }
@@ -66,29 +70,51 @@ export class TvPreviewController {
             && !element.closest('[hidden], .hide') && element.getClientRects().length > 0)
     }
 
+    private activePlayer(): HTMLElement | null {
+        const player = document.querySelector<HTMLElement>('[data-type="video-osd"]:not(.hide):not([hidden])')
+        return player && !player.closest('[hidden], .hide, [aria-hidden="true"]') && player.getClientRects().length ? player : null
+    }
+
+    private isPlayerActive(): boolean {
+        return !this.leavingPlayer && isTvLayout() && isVideoRoute() && !!this.activePlayer()
+    }
+
     private canOpen(): boolean {
-        return isTvLayout() && isVideoRoute()
+        return this.isPlayerActive()
             && typeof ApiClient !== 'undefined' && !!ApiClient.getCurrentUserId() && !this.hasOtherDialog()
     }
 
-    private onViewChange = (): void => {
-        if (!isVideoRoute() || !isTvLayout()) this.close(false)
+    private onViewChange = (event?: Event): void => {
+        if (event?.type === 'viewshow' && (event.target as HTMLElement)?.matches?.('[data-type="video-osd"]')) this.leavingPlayer = false
+        if (!this.isPlayerActive()) this.close(false)
     }
 
     private onViewBeforeHide = (event: Event): void => {
         const target = event.target as HTMLElement | null
-        if (target?.matches?.('[data-type="video-osd"]')) this.close(false)
+        if (target?.matches?.('[data-type="video-osd"]')) {
+            this.leavingPlayer = true
+            this.close(false)
+        }
     }
 
     private onBlur = (): void => { this.heldKeys.clear() }
 
     private onFocus = (event: FocusEvent): void => {
-        if (this.panel && !this.panel.element.contains(event.target as Node) && !this.hasOtherDialog()) this.panel.focus()
+        if (!this.isPlayerActive()) { this.close(false); return }
+        if (this.panel?.element.isConnected && !this.panel.element.contains(event.target as Node) && !this.hasOtherDialog()) this.panel.focus()
+    }
+
+    private onPointerDown = (event: Event): void => {
+        // Let shared Back/Home controls receive this very click, before focus changes.
+        if (this.panel && !this.panel.element.contains(event.target as Node)) this.close(false)
     }
 
     private onKeyDown = (event: KeyboardEvent): void => {
         if (event.altKey || event.ctrlKey || event.metaKey) return
+        if (!this.isPlayerActive()) { this.close(false); return }
         const physicalKey = event.code || event.key || String(event.keyCode)
+        // Some remotes omit keyup. A fresh press must never be treated as a held key.
+        if (!event.repeat) this.heldKeys.delete(physicalKey)
         // A held Up/Back must not close the panel and then also leave the player.
         if (!this.panel && this.heldKeys.has(physicalKey)) { this.consume(event); return }
         const command = keyCommands[event.key] ?? remoteCodes[event.keyCode]
@@ -108,6 +134,7 @@ export class TvPreviewController {
     }
 
     private onKeyUp = (event: KeyboardEvent): void => {
+        if (!this.isPlayerActive()) { this.close(false); return }
         const key = event.code || event.key || String(event.keyCode)
         if (this.heldKeys.delete(key)) this.consume(event)
     }
@@ -123,7 +150,8 @@ export class TvPreviewController {
     }
 
     private handleCommand(command: string, repeated = false): boolean {
-        if (!isTvLayout() || !isVideoRoute() || this.hasOtherDialog()) return false
+        if (!this.isPlayerActive()) { this.close(false); return false }
+        if (this.hasOtherDialog()) return false
         const target = document.activeElement as HTMLElement | null
         if (!this.panel && target?.closest('input, textarea, select, [contenteditable="true"]')) return false
         if (!this.panel) {
@@ -158,17 +186,15 @@ export class TvPreviewController {
             previous: () => this.navigate(-1), next: () => this.navigate(1),
             play: () => { void this.play() }, close: () => this.close()
         })
-        document.documentElement.classList.add('ipep-tv-preview-open')
-        this.panel.mount()
-        const player = document.querySelector<HTMLElement>('[data-type="video-osd"]:not(.hide)')
+        const player = this.activePlayer()
         this.playerObserver = new MutationObserver(() => {
             const currentId = this.options.currentItemId()
-            if ((player && (!player.isConnected || player.classList.contains('hide')))
-                || (currentId && this.nowPlayingId && currentId !== this.nowPlayingId)
+            if (!this.isPlayerActive() || player !== this.activePlayer()
+                || (currentId && this.nowPlayingId && !sameMediaId(currentId, this.nowPlayingId))
                 || this.hasOtherDialog()) this.close(false)
         })
         this.playerObserver.observe(document.body, {
-            childList: true, subtree: true, attributes: true, attributeFilter: ['data-id', 'class']
+            childList: true, subtree: true, attributes: true, attributeFilter: ['data-id', 'class', 'hidden', 'aria-hidden', 'style']
         })
         await this.load()
     }
@@ -177,38 +203,63 @@ export class TvPreviewController {
         const generation = ++this.generation
         this.state = 'loading'
         this.panel?.showLoading()
-        this.panel?.focus()
+        if (this.panel?.element.isConnected) this.panel.focus()
         try {
             let itemId = this.options.currentItemId()
             if (!itemId) {
-                itemId = await ApiClient.ajax({
-                    type: 'GET', url: ApiClient.getUrl(`/${Endpoints.BASE}${Endpoints.NOW_PLAYING_ITEM}`), dataType: 'json'
-                })
+                try {
+                    const context = await ApiClient.ajax({
+                        type: 'GET', url: ApiClient.getUrl(`/${Endpoints.BASE}${Endpoints.PLAYBACK_CONTEXT}`), dataType: 'json'
+                    })
+                    itemId = context?.PlayingItemId || null
+                } catch (error) {
+                    const status = (error as {status?: number; statusCode?: number})?.status
+                        ?? (error as {statusCode?: number})?.statusCode
+                    if (status === 404) throw new TvMediaUnavailableError()
+                    throw error
+                }
             }
             if (!this.isCurrent(generation)) return
-            if (!itemId) throw new Error('Start an episode, film, or live TV channel to browse.')
+            if (!itemId) throw new TvMediaUnavailableError()
             this.nowPlayingId = itemId
+            if (!this.isCurrent(generation)) return
             const result = await this.source.load(itemId, this.options.enabled)
             if (!this.isCurrent(generation)) return
             if (!this.options.enabled(result.kind)) { this.close(); return }
             this.items = result.items
             this.playingMediaId = result.playingItemId
+            this.upcomingItemId = result.upcomingItemId || null
             this.index = result.activeIndex
             this.state = 'ready'
+            this.mountPanel()
             this.render()
             this.panel?.focus()
         } catch (error) {
             if (!this.isCurrent(generation)) return
-            if (error instanceof TvMediaDisabledError) { this.close(); return }
+            if (error instanceof TvMediaDisabledError || error instanceof TvMediaUnavailableError) { this.close(); return }
             this.options.logger.error("Couldn't load TV media preview", error)
             this.state = 'error'
+            this.mountPanel()
             this.panel?.showError(error instanceof Error ? error.message : 'Could not load the preview. Check your connection and try again.')
             this.panel?.focus()
         }
     }
 
     private isCurrent(generation: number): boolean {
-        return generation === this.generation && !!this.panel && isVideoRoute() && isTvLayout()
+        if (generation !== this.generation || !this.panel) return false
+        const currentId = this.options.currentItemId()
+        if (!this.isPlayerActive() || (currentId && this.nowPlayingId && !sameMediaId(currentId, this.nowPlayingId))) {
+            this.close(false)
+            return false
+        }
+        return true
+    }
+
+    private mountPanel(): void {
+        // Resolve unsupported intro clips first, so they never flash an empty/error panel.
+        if (!this.panel || this.panel.element.isConnected) return
+        document.documentElement.classList.add('ipep-tv-preview-open')
+        this.panel.mount()
     }
 
     private navigate(direction: -1 | 1): void {
@@ -218,7 +269,7 @@ export class TvPreviewController {
         const wrapped = this.items.length > 1 && (direction > 0 ? this.index < previous : this.index > previous)
         const kind = this.items[this.index].kind
         const noun = kind === 'channel' ? 'channel' : kind === 'movie' ? 'film' : 'episode'
-        this.render(wrapped ? (direction > 0 ? (kind === 'movie' ? 'Back to the current film' : `Back to the first ${noun}`) : `Wrapped to the last ${noun}`) : '')
+        this.render(wrapped ? (direction > 0 ? (kind === 'movie' ? `Back to the ${this.upcomingItemId ? 'upcoming' : 'current'} film` : `Back to the first ${noun}`) : `Wrapped to the last ${noun}`) : '')
         this.panel?.focus()
     }
 
@@ -232,6 +283,7 @@ export class TvPreviewController {
             next: this.items[wrappedIndex(this.index, 1, this.items.length)],
             index: this.index, total: this.items.length,
             isPlaying: episode.id === this.playingMediaId, announcement,
+            isUpcoming: episode.id === this.upcomingItemId,
             blurThumbnail: settings.BlurThumbnail && shouldBlur,
             blurDescription: settings.BlurDescription && shouldBlur
         })
@@ -262,18 +314,21 @@ export class TvPreviewController {
     }
 
     close(restoreFocus = true): void {
+        if (!restoreFocus) this.heldKeys.clear()
         if (!this.panel) return
         ++this.generation
         this.state = 'closed'
         this.playerObserver?.disconnect()
         this.playerObserver = null
-        this.panel?.destroy()
+        const panel = this.panel
         this.panel = null
+        panel.destroy()
         this.items = []
         this.nowPlayingId = null
         this.playingMediaId = null
+        this.upcomingItemId = null
         document.documentElement.classList.remove('ipep-tv-preview-open')
-        if (restoreFocus && this.previousFocus?.isConnected && this.previousFocus.getClientRects().length
+        if (restoreFocus && this.isPlayerActive() && this.previousFocus?.isConnected && this.previousFocus.getClientRects().length
             && !this.previousFocus.closest('[hidden], .hide')) this.previousFocus.focus({preventScroll: true})
         this.previousFocus = null
     }
@@ -288,8 +343,10 @@ export class TvPreviewController {
         window.removeEventListener('hashchange', this.onViewChange)
         window.removeEventListener('blur', this.onBlur)
         document.removeEventListener('viewshow', this.onViewChange)
-        document.removeEventListener('viewbeforehide', this.onViewBeforeHide)
+        document.removeEventListener('viewbeforehide', this.onViewBeforeHide, true)
         document.removeEventListener('focusin', this.onFocus, true)
+        document.removeEventListener('pointerdown', this.onPointerDown, true)
+        document.removeEventListener('mousedown', this.onPointerDown, true)
         this.heldKeys.clear()
     }
 }
