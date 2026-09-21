@@ -4,6 +4,8 @@ import {TvMediaDisabledError, TvMediaUnavailableError, TvMediaSource, sameMediaI
 import {PluginSettings} from '../Models/PluginSettings'
 import {Endpoints} from '../Endpoints'
 import {Logger} from './Logger'
+import {tryPlayChannelLocally} from './TvChannelPlayback'
+import {ChannelPlaybackTimeoutError, waitForChannelPlayback} from './TvChannelPlaybackConfirmation'
 
 export function isTvLayout(): boolean {
     return document.documentElement.classList.contains('layout-tv') || document.body.classList.contains('layout-tv')
@@ -39,6 +41,7 @@ export class TvPreviewController {
     private playerObserver: MutationObserver | null = null
     private readonly source = new TvMediaSource()
     private readonly heldKeys = new Set<string>()
+    private playbackAbort: AbortController | null = null
 
     constructor(private options: {
         currentItemId: () => string | null,
@@ -297,24 +300,45 @@ export class TvPreviewController {
         const generation = this.generation
         this.state = 'playing'
         this.panel?.setPlaying(true)
+        const playbackAbort = new AbortController()
+        this.playbackAbort = playbackAbort
         try {
             const ticks = episode.kind === 'channel' || episode.played ? 0 : episode.playbackPositionTicks
-            // Use the existing authenticated session endpoint, retaining errors for an actionable retry.
-            await ApiClient.ajax({type: 'GET', url: ApiClient.getUrl(`/${Endpoints.BASE}${Endpoints.PLAY_MEDIA}`
-                .replace('{itemId}', episode.id).replace('{ticks}', String(ticks)))})
+            // Channel changes should originate in this client's player, without depending
+            // on a server-to-client WebSocket command making a round trip back to the TV.
+            const handledLocally = episode.kind === 'channel' && await tryPlayChannelLocally(episode.id,
+                () => !playbackAbort.signal.aborted && this.isCurrent(generation))
+            if (!this.isCurrent(generation)) return
+            const sendPlayRequest = async (): Promise<void> => {
+                await ApiClient.ajax({type: 'GET', url: ApiClient.getUrl(`/${Endpoints.BASE}${Endpoints.PLAY_MEDIA}`
+                    .replace('{itemId}', episode.id).replace('{ticks}', String(ticks)))})
+            }
+            if (episode.kind === 'channel') {
+                // Start the deadline before the fallback request, which itself may stall.
+                // A successful HTTP response alone must never count as a successful tune.
+                const confirmation = waitForChannelPlayback(episode.id, this.options.currentItemId, playbackAbort.signal)
+                await (handledLocally ? confirmation
+                    : Promise.race([confirmation, sendPlayRequest().then(() => confirmation)]))
+            } else await sendPlayRequest()
             if (this.isCurrent(generation)) this.close()
         } catch (error) {
             if (!this.isCurrent(generation)) return
             this.options.logger.error("Couldn't play the selected media", error)
             this.state = 'ready'
             this.panel?.setPlaying(false)
-            this.render('Could not start playback. Press OK to try again.')
+            this.render(error instanceof ChannelPlaybackTimeoutError ? error.message
+                : 'Could not start playback. Press OK to try again.')
             this.panel?.focus()
+        } finally {
+            if (this.playbackAbort === playbackAbort) this.playbackAbort = null
+            playbackAbort.abort()
         }
     }
 
     close(restoreFocus = true): void {
         if (!restoreFocus) this.heldKeys.clear()
+        this.playbackAbort?.abort()
+        this.playbackAbort = null
         if (!this.panel) return
         ++this.generation
         this.state = 'closed'

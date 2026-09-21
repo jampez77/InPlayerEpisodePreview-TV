@@ -53,6 +53,8 @@ Open the panel during live TV to browse the channels available to your Jellyfin 
 
 Live TV requires channels already configured and working in Jellyfin. Programme information depends on your guide data; the channel name remains visible when programme details are unavailable.
 
+Channel selection uses Jellyfin's local player action where available, including in the LG webOS app, with the authenticated session command as a fallback. The button shows **Tuning channel…** while waiting for Jellyfin to report the selected channel. If it does not start within 20 seconds, the selection stays open with a retry message. Both the remote's **OK** button and pointer clicks use this action.
+
 ![Live TV channel browser with current programme details](Images/live-tv-preview.png)
 
 ### Desktop and mobile
@@ -126,7 +128,7 @@ bash scripts/package-plugin.sh 12.0.0
 
 `Web/InPlayerPreview.js` is the generated production bundle embedded in the DLL. Run `npm run build` from the project directory after editing TypeScript or CSS. For a development bundle with a separate source map, run `npx webpack --mode development`.
 
-Tests cover episode pagination and ordering, season transitions, whole-show wrapping, movies and similar recommendations, live TV channels, pre-roll playback queues, remote and keyboard commands, playback errors, player-exit focus and key cleanup, asynchronous cancellation, and the desktop button.
+Tests cover episode pagination and ordering, season transitions, whole-show wrapping, movies and similar recommendations, live TV channels and confirmed tuning, pre-roll playback queues, remote and keyboard commands, playback errors, player-exit focus and key cleanup, asynchronous cancellation, and the desktop button.
 
 ## Try the demo
 

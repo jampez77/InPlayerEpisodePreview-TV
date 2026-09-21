@@ -57,7 +57,7 @@
     };
     const clone = value => JSON.parse(JSON.stringify(value));
     const demo = window.__demo = {
-        episodes, seasons, movies, channels, intros, settings, calls: [], playRequests: [], playerCommands: [],
+        episodes, seasons, movies, channels, intros, settings, calls: [], playRequests: [], nativePlayRequests: [], playerCommands: [],
         featureItemId,
         playbackQueue: params.get('scenario') === 'preroll' ? [
             {Id: 'intro-1', PlaylistItemId: 'queue-intro'},
@@ -66,6 +66,7 @@
         ] : [],
         media: 'episode', layout: 'tv',
         delayMs: 0, failPlay: false, failLoad: false, ready: false,
+        nativeChannelPlayback: params.get('native-playback') === '1', ignorePlay: false, stallPlay: false, channelTuneDelayMs: 0,
         async wait() {
             if (this.delayMs) await new Promise(resolve => setTimeout(resolve, this.delayMs));
             if (this.failLoad) throw new Error('Synthetic media load failure');
@@ -131,6 +132,29 @@
             this.updateInstructions();
             document.dispatchEvent(new CustomEvent('viewshow', {bubbles: true}));
         }
+    };
+    // Model Jellyfin's v0 itemscontainer only when explicitly enabled. The real
+    // host handles its item's play command locally, independently of /Play.
+    const createElement = document.createElement;
+    document.createElement = function (tagName, options) {
+        if (tagName === 'div' && options === 'emby-itemscontainer') {
+            const container = createElement.call(this, tagName);
+            if (demo.nativeChannelPlayback) {
+                container.attachedCallback = function () {};
+                container.addEventListener('command', event => {
+                    if (!container.isConnected || event.detail?.command !== 'play') return;
+                    const item = event.target.closest('[data-id]');
+                    if (!item || item.dataset.type !== 'TvChannel' || item.dataset.serverid !== 'demo-server') return;
+                    demo.nativePlayRequests.push({itemId: item.dataset.id, ticks: Number(item.dataset.positionticks),
+                        serverId: item.dataset.serverid, type: item.dataset.type, mediaType: item.dataset.mediatype});
+                    event.preventDefault();
+                    event.stopPropagation();
+                    if (!demo.ignorePlay) setTimeout(() => demo.setPlaying(item.dataset.id), demo.channelTuneDelayMs);
+                });
+            }
+            return container;
+        }
+        return createElement.apply(this, arguments);
     };
     if (params.get('scenario') === 'missing') {
         delete episodes[1].ImageTags.Primary;
@@ -240,6 +264,14 @@
             if (play) {
                 demo.playRequests.push({itemId: play[1], ticks: Number(play[2])});
                 if (demo.failPlay) throw new Error('Synthetic playback failure');
+                if (demo.stallPlay) await new Promise(() => {});
+                // A session command can be accepted even if the client never
+                // receives it. Tests can model that independently of HTTP errors.
+                if (demo.ignorePlay) return undefined;
+                if (play[1].startsWith('channel-') && demo.channelTuneDelayMs) {
+                    setTimeout(() => demo.setPlaying(play[1]), demo.channelTuneDelayMs);
+                    return undefined;
+                }
                 demo.setPlaying(play[1]);
                 const toast = document.getElementById('demo-toast');
                 toast.textContent = 'Demo playback switched to ' + items.find(item => item.Id === play[1]).Name;

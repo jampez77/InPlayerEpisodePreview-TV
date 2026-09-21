@@ -55,11 +55,14 @@ Add query parameters before `#/video`:
 | `?layout=desktop` | Start with the desktop layout. |
 | `?media=movie` | Start with the playing film and similar-film recommendations. |
 | `?media=live-tv` | Start with live channels and current programme information. |
+| `?media=live-tv&native-playback=1` | Simulate Jellyfin's local channel action, including remote OK and pointer activation. Without this option the demo exercises the session-command fallback. |
 | `?scenario=preroll` | Start an intro before a queued film. Add `&media=episode` to preview an upcoming episode instead. |
 | `?scenario=trailer-no-feature` | Play a trailer without a known queued feature; no preview panel or error is shown. |
 | `?scenario=missing` | Show the current episode, film, or channel with missing metadata; combine with a media parameter. |
 | `?scenario=unsafe` | Exercise safe rendering of text containing markup. |
 
 The fixture's `window.__demo` object also exposes `episodes`, `seasons`, `movies`, `channels`, `intros`, `playbackQueue`, `playingItemId`, `setPlaying(id)`, `delayMs`, `failLoad`, and `failPlay` for metadata, loading, and playback checks. The session's `playingItemId` is independent of the player controls' `data-id`, so tests can simulate an OSD that is still initializing. `playRequests` records simulated selections so tests can distinguish browsing from playing. In the pre-roll example, `setPlaying('movie-1')` simulates the feature starting naturally after the intro.
+
+Channel tests also use `nativePlayRequests`, `channelTuneDelayMs`, and `ignorePlay` to distinguish accepted commands from actual playback. `ignorePlay` suppresses playback for either action path; `stallPlay` leaves the fallback HTTP request pending. A delayed tune keeps **Tuning channel…** visible; an accepted or stalled command that never starts the channel offers a retry after 20 seconds. Closing the panel cancels confirmation polling. These cases simulate the host's action contract and do not verify real tuner playback on an LG TV.
 
 For installation, compatibility, and upstream attribution, see the [project README](https://github.com/jampez77/InPlayerEpisodePreview-TV#readme).
