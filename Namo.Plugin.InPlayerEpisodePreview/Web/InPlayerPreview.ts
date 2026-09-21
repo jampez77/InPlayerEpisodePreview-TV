@@ -1,4 +1,4 @@
-﻿import {Logger} from "./Services/Logger";
+import {Logger} from "./Services/Logger";
 import {PreviewButtonTemplate} from "./Components/PreviewButtonTemplate";
 import {ProgramDataStore} from "./Services/ProgramDataStore";
 import {DialogContainerTemplate} from "./Components/DialogContainerTemplate";
@@ -16,6 +16,7 @@ import {PreviewItem} from "./Models/PreviewData/PreviewItem";
 import {activateSpinner, spinnerHtml} from "./Components/Spinner";
 import {setItemOverlayActive, updateItemProgressDom} from "./Components/ListElementTemplate";
 import {updateEndTimeDisplay} from "./Components/ItemDetails";
+import {isTvLayout, TvPreviewController} from "./Services/TvPreviewController";
 
 import './Styles/Styles.css'
 
@@ -24,6 +25,12 @@ const logger: Logger = new Logger()
 const programDataStore: ProgramDataStore = new ProgramDataStore()
 const playbackHandler: PlaybackHandler = new PlaybackHandler(logger)
 const listElementFactory = new ListElementFactory(playbackHandler, programDataStore, logger)
+const tvPreview = new TvPreviewController({
+    currentItemId: getLatestUserRatingItemId,
+    enabled: () => programDataStore.isTypeAllowedForPreview(ItemType.Episode),
+    settings: () => programDataStore.pluginSettings,
+    logger
+})
 
 const collectionsByItemId = new Map<string, Promise<Group[]>>()
 
@@ -307,6 +314,7 @@ function viewShowEventHandler(): void {
 
         // Only actually inserted into the OSD once the item's type is confirmed enabled - see preloadPreviewData.
         function insertPreviewButton(): void {
+            if (isTvLayout()) return
             if (previewButton) return
             if (!videoPaths.includes(getLocationPath())) return
 
@@ -317,7 +325,7 @@ function viewShowEventHandler(): void {
             }
 
             // lastElementChild.parentElement is used for casting from Element to HTMLElement
-            const parent: HTMLElement = buttonsBar.lastElementChild.parentElement as HTMLElement;
+            const parent: HTMLElement = buttonsBar;
 
             let index: number = Array.from(parent.children).findIndex((child: Element): boolean => child.classList.contains("btnUserRating"));
             // if index is invalid try to use the old position (used in Jellyfin 10.8.12)
@@ -382,6 +390,8 @@ function viewShowEventHandler(): void {
         }
         
         function preloadPreviewData(itemId: string | null): void {
+            // TV browsing loads the actual series, independently of desktop collection/group state.
+            if (isTvLayout()) return
             if (!itemId) return
             if (!programDataStore.isGroupsCacheExpired && programDataStore.groups.some(g => g.items.some(item => item.Id === itemId))) {
                 // Already fetched (and therefore already known-allowed) earlier this session - just show the button.
@@ -456,6 +466,7 @@ function viewShowEventHandler(): void {
         schedulePreload()
 
         async function previewButtonClickHandler(): Promise<void> {
+            if (isTvLayout()) return
             if (previewButtonLoading) return
             previewButtonLoading = true
             try {
@@ -610,30 +621,45 @@ function viewShowEventHandler(): void {
             activeItem?.parentElement.scrollIntoView()
         }
     }
-    function unloadVideoView(): void {
-        logger.debug("Unloading video view")
-
-        // Clear old data and reset previewContainerLoaded flag
-        const videoElement = document.querySelector<HTMLVideoElement>('video.htmlvideoplayer')
-        videoElement?.removeEventListener('timeupdate', onVideoTimeUpdate)
-        videoElement?.removeEventListener('ratechange', onVideoRateChange)
-        lastTrackedPositionSecond = -1
-
-        preloadObserver?.disconnect()
-        preloadObserver = null
-        pendingPreloadItemId = null
-        pendingPreload = null
-
-        buttonsContainerObserver?.disconnect()
-        buttonsContainerObserver = null
-
-        document.getElementById('previewPopup')?.remove()
-        document.querySelectorAll('#popupPreviewButton').forEach(element => element.remove())
-
-        previewContainerLoaded = false // Reset flag when unloading
-    }
 
     function isPreviewButtonCreated(): boolean {
         return getActiveButtonsBar()?.querySelector('#popupPreviewButton') != null
     }
 }
+
+
+function unloadVideoView(): void {
+    logger.debug("Unloading video view")
+    tvPreview.close(false)
+
+    // Clear old data and reset previewContainerLoaded flag
+    const videoElement = document.querySelector<HTMLVideoElement>('video.htmlvideoplayer')
+    videoElement?.removeEventListener('timeupdate', onVideoTimeUpdate)
+    videoElement?.removeEventListener('ratechange', onVideoRateChange)
+    lastTrackedPositionSecond = -1
+
+    preloadObserver?.disconnect()
+    preloadObserver = null
+    pendingPreloadItemId = null
+    pendingPreload = null
+
+    buttonsContainerObserver?.disconnect()
+    buttonsContainerObserver = null
+
+    document.getElementById('previewPopup')?.remove()
+    document.querySelectorAll('#popupPreviewButton').forEach(element => element.remove())
+
+    previewContainerLoaded = false // Reset flag when unloading
+}
+
+// Layout can change without a player route transition (for example in a web wrapper).
+let lastTvLayout = isTvLayout()
+const layoutObserver = new MutationObserver(() => {
+    const tvLayout = isTvLayout()
+    if (tvLayout === lastTvLayout) return
+    lastTvLayout = tvLayout
+    unloadVideoView()
+    viewShowEventHandler()
+})
+layoutObserver.observe(document.documentElement, {attributes: true, attributeFilter: ['class']})
+layoutObserver.observe(document.body, {attributes: true, attributeFilter: ['class']})

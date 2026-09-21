@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en" class="layout-tv">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Episode preview · Offline demo</title>
+    <link rel="stylesheet" href="/demo/demo.css">
+    <link rel="stylesheet" href="/demo/jellyfin-host.css">
+</head>
+<body>
+    <main class="demo-stage" data-type="video-osd">
+        <div class="demo-atmosphere" aria-hidden="true"></div>
+        <header class="demo-header">
+            <div class="demo-brand"><span class="demo-mark" aria-hidden="true">◈</span> Jellyfin <span class="demo-label">OFFLINE DEMO</span></div>
+            <div class="demo-layout"><button id="demo-tv" type="button">TV</button><button id="demo-desktop" type="button">Desktop</button></div>
+        </header>
+        <section class="demo-now-playing" aria-label="Demo video">
+            <p class="demo-eyebrow">NOW PLAYING · A FICTIONAL SERIES</p>
+            <h1>The long<br>way home<span>.</span></h1>
+            <p id="demo-playing-name">Season 1 · Episode 2 · The Glass Station</p>
+        </section>
+        <div class="demo-instructions" id="demo-instructions"><kbd>↓</kbd><div>Browse this show<span>Open the episode preview with your remote or keyboard.</span></div></div>
+        <footer class="videoOsdBottom-maincontrols">
+            <div class="demo-timeline"><span></span></div>
+            <div class="buttons">
+                <button class="btnPause autoSize paper-icon-button-light" aria-label="Pause">Ⅱ</button>
+                <span class="demo-time osdTimeText">18:42 <span>/ 48:00</span></span>
+                <button class="btnUserRating autoSize paper-icon-button-light" data-id="episode-2" aria-label="Favorite">♡</button>
+                <button class="demo-volume autoSize paper-icon-button-light" aria-label="Volume">◖</button>
+            </div>
+        </footer>
+        <div class="demo-toast" id="demo-toast" role="status" hidden></div>
+    </main>
+    <script src="/demo/fixture.js"></script>
+    <script src="../Web/InPlayerPreview.js"></script>
+    <script>
+        document.dispatchEvent(new CustomEvent('viewshow', {bubbles: true}));
+        document.querySelector('.btnPause').focus();
+    </script>
+</body>
+</html>

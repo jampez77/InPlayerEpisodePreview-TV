@@ -1,0 +1,461 @@
+/* Only the TV layout replaces the traditional player button. */
+html.layout-tv #popupPreviewButton,
+body.layout-tv #popupPreviewButton {
+    display: none !important;
+}
+
+/* The controller owns this class and removes it whenever the dialog closes. */
+html.ipep-tv-preview-open [data-type="video-osd"] .videoOsdBottom,
+body.ipep-tv-preview-open [data-type="video-osd"] .videoOsdBottom,
+html.ipep-tv-preview-open [data-type="video-osd"] .videoOsdBottom-maincontrols,
+body.ipep-tv-preview-open [data-type="video-osd"] .videoOsdBottom-maincontrols,
+html.ipep-tv-preview-open [data-type="video-osd"] .videoOsdTop,
+body.ipep-tv-preview-open [data-type="video-osd"] .videoOsdTop {
+    visibility: hidden !important;
+    pointer-events: none !important;
+}
+
+#tvEpisodePreview {
+    --ipep-accent: #76e4ed;
+    --ipep-muted: #b5bdcc;
+    box-sizing: border-box;
+    position: fixed;
+    z-index: 100000;
+    inset: auto 0 0;
+    max-height: 100vh;
+    overflow: auto;
+    color: #f8faff;
+    background: linear-gradient(180deg, rgba(4, 9, 19, 0) 0, rgba(4, 9, 19, .94) 10%, #070d1a 34%, #070d1a 100%);
+    padding: 4.7vh 5vw 3vh;
+    font-family: inherit;
+    font-size: clamp(16px, 1.3vw, 27px);
+    line-height: 1.4;
+    text-align: left;
+    direction: ltr;
+    animation: ipep-tv-enter 160ms ease-out both;
+    outline: none;
+    isolation: isolate;
+}
+
+#tvEpisodePreview *,
+#tvEpisodePreview *::before,
+#tvEpisodePreview *::after {
+    box-sizing: border-box;
+}
+
+#tvEpisodePreview [hidden] {
+    display: none !important;
+}
+
+#tvEpisodePreview .ipep-tv-shell {
+    width: 100%;
+    max-width: 2200px;
+    margin: 0 auto;
+}
+
+#tvEpisodePreview button {
+    appearance: none;
+    font: inherit;
+    line-height: 1.25;
+    text-transform: none;
+    letter-spacing: normal;
+    color: inherit;
+    margin: 0;
+    cursor: pointer;
+    border: 1px solid transparent;
+    border-radius: .5em;
+    background: transparent;
+    box-shadow: none;
+    transition: background 100ms ease, border-color 100ms ease;
+}
+
+#tvEpisodePreview button:focus {
+    outline: 3px solid #fff;
+    outline-offset: 5px;
+}
+
+#tvEpisodePreview button:disabled {
+    cursor: wait;
+    opacity: .6;
+}
+
+#tvEpisodePreview .ipep-tv-header {
+    display: flex;
+    align-items: center;
+    gap: 1.5em;
+    margin-bottom: 1.25em;
+}
+
+#tvEpisodePreview .ipep-tv-heading {
+    min-width: 0;
+    display: flex;
+    align-items: baseline;
+    gap: .9em;
+    flex: 1;
+}
+
+#tvEpisodePreview .ipep-tv-eyebrow {
+    color: var(--ipep-accent);
+    font-size: .72em;
+    font-weight: 700;
+    letter-spacing: .14em;
+}
+
+#tvEpisodePreview .ipep-tv-series {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 1.1em;
+    font-weight: 600;
+}
+
+#tvEpisodePreview .ipep-tv-count {
+    color: var(--ipep-muted);
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+    font-size: .84em;
+}
+
+#tvEpisodePreview .ipep-tv-close {
+    display: flex;
+    align-items: center;
+    gap: .5em;
+    color: #d8dfec;
+    padding: .5em .75em;
+    background: rgba(255, 255, 255, .07);
+}
+
+#tvEpisodePreview .ipep-tv-close:hover,
+#tvEpisodePreview .ipep-tv-neighbor:hover,
+#tvEpisodePreview .ipep-tv-neighbor:focus {
+    background: rgba(118, 228, 237, .1);
+    border-color: rgba(118, 228, 237, .28);
+}
+
+#tvEpisodePreview .ipep-tv-content {
+    display: grid;
+    grid-template-columns: minmax(0, 38fr) minmax(0, 62fr);
+    align-items: start;
+    gap: 2.25vw;
+}
+
+#tvEpisodePreview .ipep-tv-image-frame {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, .13);
+    border-radius: .6em;
+    background: #121e32;
+    box-shadow: 0 .6em 2em rgba(0, 0, 0, .22);
+}
+
+#tvEpisodePreview .ipep-tv-image {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+#tvEpisodePreview .ipep-tv-thumbnail-hidden .ipep-tv-image {
+    filter: blur(25px);
+    transform: scale(1.12);
+}
+
+#tvEpisodePreview .ipep-tv-image-fallback {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: .6em;
+    color: var(--ipep-muted);
+    background: radial-gradient(ellipse at 50% 40%, #24354e, #111b2d);
+}
+
+#tvEpisodePreview .ipep-tv-image-fallback .ipep-tv-icon {
+    color: #6e859e;
+    font-size: 3em;
+    line-height: 1;
+}
+
+#tvEpisodePreview .ipep-tv-playing {
+    position: absolute;
+    left: 1em;
+    top: 1em;
+    border-radius: .35em;
+    background: rgba(5, 14, 24, .9);
+    color: #a0f6f8;
+    padding: .4em .7em;
+    font-size: .75em;
+    font-weight: 600;
+    box-shadow: 0 0 0 1px rgba(118, 228, 237, .3);
+}
+
+#tvEpisodePreview .ipep-tv-playing::before {
+    content: "";
+    display: inline-block;
+    height: .45em;
+    width: .45em;
+    margin-right: .55em;
+    border-radius: 50%;
+    background: var(--ipep-accent);
+    vertical-align: middle;
+}
+
+#tvEpisodePreview .ipep-tv-progress {
+    position: absolute;
+    height: 5px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, .6);
+}
+
+#tvEpisodePreview .ipep-tv-progress-fill {
+    height: 100%;
+    background: var(--ipep-accent);
+}
+
+#tvEpisodePreview .ipep-tv-details {
+    min-width: 0;
+}
+
+#tvEpisodePreview .ipep-tv-season {
+    color: var(--ipep-accent);
+    font-size: .87em;
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    margin: 0 0 .25em;
+}
+
+#tvEpisodePreview .ipep-tv-title {
+    margin: 0;
+    font-size: 1.9em;
+    font-weight: 650;
+    letter-spacing: -.025em;
+    line-height: 1.15;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    overflow-wrap: anywhere;
+}
+
+#tvEpisodePreview .ipep-tv-metadata {
+    color: var(--ipep-muted);
+    font-size: .82em;
+    margin: .55em 0 .5em;
+}
+
+#tvEpisodePreview .ipep-tv-description-frame {
+    position: relative;
+    margin: 0 0 1.05em;
+}
+
+#tvEpisodePreview .ipep-tv-description {
+    margin: 0;
+    max-width: 65ch;
+    color: #d3dae7;
+    font-size: .95em;
+    line-height: 1.5;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    overflow-wrap: anywhere;
+}
+
+#tvEpisodePreview .ipep-tv-description-hidden .ipep-tv-description {
+    filter: blur(7px);
+    user-select: none;
+    opacity: .35;
+}
+
+#tvEpisodePreview .ipep-tv-spoiler-notice {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    color: var(--ipep-muted);
+    font-size: .85em;
+}
+
+#tvEpisodePreview .ipep-tv-actions {
+    display: flex;
+    align-items: center;
+    gap: 1.1em;
+    margin: .2em 0 .35em;
+}
+
+#tvEpisodePreview .ipep-tv-play {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: .65em;
+    min-height: 2.8em;
+    padding: .7em 1.4em;
+    color: #051824;
+    background: var(--ipep-accent);
+    font-size: .94em;
+    font-weight: 700;
+}
+
+#tvEpisodePreview .ipep-tv-play:hover {
+    background: #a2f6fb;
+}
+
+#tvEpisodePreview .ipep-tv-play .ipep-tv-icon {
+    font-size: .8em;
+}
+
+#tvEpisodePreview .ipep-tv-enter-hint {
+    color: var(--ipep-muted);
+    font-size: .78em;
+}
+
+#tvEpisodePreview .ipep-tv-announcement {
+    min-height: 1.55em;
+    margin: .9em 0 .45em;
+    color: var(--ipep-accent);
+    font-size: .78em;
+}
+
+#tvEpisodePreview .ipep-tv-footer {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    gap: 1.8em;
+    align-items: center;
+    padding-top: .8em;
+    border-top: 1px solid rgba(255, 255, 255, .12);
+}
+
+#tvEpisodePreview .ipep-tv-neighbor {
+    min-width: 0;
+    min-height: 3em;
+    display: flex;
+    align-items: center;
+    gap: .8em;
+    padding: .45em .55em;
+    text-align: left;
+}
+
+#tvEpisodePreview .ipep-tv-neighbor > .ipep-tv-icon {
+    font-size: 2.2em;
+    line-height: 1;
+    color: var(--ipep-accent);
+}
+
+#tvEpisodePreview .ipep-tv-next {
+    grid-column: 3;
+    justify-content: flex-end;
+    text-align: right;
+}
+
+#tvEpisodePreview .ipep-tv-neighbor-text {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    gap: .15em;
+}
+
+#tvEpisodePreview .ipep-tv-neighbor-caption {
+    color: var(--ipep-muted);
+    font-size: .62em;
+    letter-spacing: .12em;
+}
+
+#tvEpisodePreview .ipep-tv-neighbor-title {
+    color: #e0e6f1;
+    font-size: .78em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+#tvEpisodePreview .ipep-tv-hints {
+    grid-column: 2;
+    grid-row: 1;
+    display: inline-flex;
+    gap: .45em;
+    align-items: center;
+    color: var(--ipep-muted);
+    font-size: .76em;
+}
+
+#tvEpisodePreview .ipep-tv-hints > span {
+    margin-right: .55em;
+}
+
+#tvEpisodePreview .ipep-tv-key {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.75em;
+    height: 1.75em;
+    border: 1px solid #536174;
+    border-radius: .3em;
+    font: inherit;
+    color: #e1e9f5;
+}
+
+#tvEpisodePreview .ipep-tv-message {
+    padding: 1.5em 0 2.5em;
+    min-height: 20vh;
+}
+
+#tvEpisodePreview .ipep-tv-message-title {
+    font-size: 1.6em;
+    margin: 0 0 .3em;
+}
+
+#tvEpisodePreview .ipep-tv-message-text {
+    color: var(--ipep-muted);
+    margin: 0 0 1.4em;
+}
+
+#tvEpisodePreview .ipep-tv-sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+@keyframes ipep-tv-enter {
+    from { opacity: 0; transform: translateY(14px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-height: 760px) {
+    #tvEpisodePreview { padding-top: 3.8vh; padding-bottom: 2.5vh; }
+    #tvEpisodePreview .ipep-tv-header { margin-bottom: 1em; }
+    #tvEpisodePreview .ipep-tv-title { font-size: 1.75em; }
+    #tvEpisodePreview .ipep-tv-description { -webkit-line-clamp: 3; }
+    #tvEpisodePreview .ipep-tv-description-frame { margin-bottom: .8em; }
+    #tvEpisodePreview .ipep-tv-announcement { margin-top: .55em; }
+}
+
+@media (max-width: 800px) {
+    #tvEpisodePreview { padding-left: 4vw; padding-right: 4vw; }
+    #tvEpisodePreview .ipep-tv-heading { display: block; }
+    #tvEpisodePreview .ipep-tv-content { grid-template-columns: minmax(0, 34fr) minmax(0, 66fr); gap: 3vw; }
+    #tvEpisodePreview .ipep-tv-title { font-size: 1.4em; }
+    #tvEpisodePreview .ipep-tv-description { -webkit-line-clamp: 2; }
+    #tvEpisodePreview .ipep-tv-footer { gap: .5em; }
+    #tvEpisodePreview .ipep-tv-hints { font-size: .65em; }
+    #tvEpisodePreview .ipep-tv-enter-hint { display: none; }
+    #tvEpisodePreview .ipep-tv-playing { font-size: .65em; left: .6em; top: .6em; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    #tvEpisodePreview { animation: none; }
+    #tvEpisodePreview button { transition: none; }
+}

@@ -1,0 +1,49 @@
+name: Verify TV preview
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  web:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: Namo.Plugin.InPlayerEpisodePreview
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: Namo.Plugin.InPlayerEpisodePreview/package-lock.json
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:browser
+
+  server:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - jellyfin: 10.10.7
+            sdk: 8.0.x
+          - jellyfin: 10.11.0
+            sdk: 9.0.x
+          - jellyfin: 12.0.0
+            sdk: 10.0.x
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: Namo.Plugin.InPlayerEpisodePreview/package-lock.json
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: ${{ matrix.sdk }}
+      - run: npm ci
+        working-directory: Namo.Plugin.InPlayerEpisodePreview
+      - run: dotnet build Namo.Plugin.InPlayerEpisodePreview/Namo.Plugin.InPlayerEpisodePreview.csproj -c Release -p:JellyfinVersion=${{ matrix.jellyfin }} --nologo

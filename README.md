@@ -1,139 +1,70 @@
-<div align="right">
-  <details>
-    <summary >🌐 Language</summary>
-    <div>
-      <div align="center">
-        <p>The following translations were automatically generated using AI. Please note that they may include inaccuracies or reference older versions of this readme.</p>
-        <a href="https://openaitx.github.io/view.html?user=Namo2&project=InPlayerEpisodePreview&lang=en">English</a>
-        | <a href="https://openaitx.github.io/view.html?user=Namo2&project=InPlayerEpisodePreview&lang=zh-CN">简体中文</a>
-        | <a href="https://openaitx.github.io/view.html?user=Namo2&project=InPlayerEpisodePreview&lang=zh-TW">繁體中文</a>
-        | <a href="https://openaitx.github.io/view.html?user=Namo2&project=InPlayerEpisodePreview&lang=ja">日本語</a>
-        | <a href="https://openaitx.github.io/view.html?user=Namo2&project=InPlayerEpisodePreview&lang=ko">한국어</a>
-        | <a href="https://openaitx.github.io/view.html?user=Namo2&project=InPlayerEpisodePreview&lang=hi">हिन्दी</a>
-        | <a href="https://openaitx.github.io/view.html?user=Namo2&project=InPlayerEpisodePreview&lang=th">ไทย</a>
-        | <a href="https://openaitx.github.io/view.html?user=Namo2&project=InPlayerEpisodePreview&lang=fr">Français</a>
-        | <a href="https://openaitx.github.io/view.html?user=Namo2&project=InPlayerEpisodePreview&lang=de">Deutsch</a>
-        | <a href="https://openaitx.github.io/view.html?user=Namo2&project=InPlayerEpisodePreview&lang=es">Español</a>
-        | <a href="https://openaitx.github.io/view.html?user=Namo2&project=InPlayerEpisodePreview&lang=it">Italiano</a>
-        | <a href="https://openaitx.github.io/view.html?user=Namo2&project=InPlayerEpisodePreview&lang=ru">Русский</a>
-        | <a href="https://openaitx.github.io/view.html?user=Namo2&project=InPlayerEpisodePreview&lang=pt">Português</a>
-        | <a href="https://openaitx.github.io/view.html?user=Namo2&project=InPlayerEpisodePreview&lang=nl">Nederlands</a>
-        | <a href="https://openaitx.github.io/view.html?user=Namo2&project=InPlayerEpisodePreview&lang=pl">Polski</a>
-        | <a href="https://openaitx.github.io/view.html?user=Namo2&project=InPlayerEpisodePreview&lang=ar">العربية</a>
-        | <a href="https://openaitx.github.io/view.html?user=Namo2&project=InPlayerEpisodePreview&lang=fa">فارسی</a>
-        | <a href="https://openaitx.github.io/view.html?user=Namo2&project=InPlayerEpisodePreview&lang=tr">Türkçe</a>
-        | <a href="https://openaitx.github.io/view.html?user=Namo2&project=InPlayerEpisodePreview&lang=vi">Tiếng Việt</a>
-        | <a href="https://openaitx.github.io/view.html?user=Namo2&project=InPlayerEpisodePreview&lang=id">Bahasa Indonesia</a>
-        | <a href="https://openaitx.github.io/view.html?user=Namo2&project=InPlayerEpisodePreview&lang=as">অসমীয়া</
-      </div>
-    </div>
-  </details>
-</div>
+# In Player Episode Preview — TV edition
 
-In Player Episode Preview
-====================
-## 📄 About
-This plugin adds an episode list to the video player, which allows you to preview every episode of the TV show without having to leave the player.
+A TV-friendly fork of [Namo2/InPlayerEpisodePreview](https://github.com/Namo2/InPlayerEpisodePreview), based on upstream commit `015c57b`. The original Jellyfin server plugin and desktop episode preview are retained. TV layouts get a large, remote-controlled episode browser over the playing video.
 
-This modification has support for the following clients:
-* [Jellyfin Web Client](https://github.com/jellyfin/jellyfin-web)
-* [Jellyfin Media Player](https://github.com/jellyfin/jellyfin-media-player) (JMP) Desktop Client
+![TV episode browser using fictional demo content](Images/tv-preview.png)
 
-## ✨ Features
-* List all episodes of a season
-* Switch between seasons
-* Shows episode title, description, thumbnail and playback progress
-* Shows episode details like community ranking
-* Mark episodes as played or favourite
-* Start a new episode
-* Should work with custom themes
+## Controls
 
-## 📸 Preview
-<img src="https://github.com/Namo2/InPlayerEpisodePreview/blob/master/Images/preview.gif" width="550" height="450">
+| Layout | Action |
+| --- | --- |
+| TV | **Down** opens the browser on the playing episode. |
+| TV | **Left / Right** selects the previous / next episode, across season boundaries. |
+| TV | **Up**, **Back**, or **Escape** closes and returns to the player. |
+| TV | **OK / Enter** plays or resumes the selected episode; selecting the playing episode returns to it. |
+| Desktop / mobile | Use the original **Episode Preview** button in the player. |
 
-Used Theme: (SkinManager) Kaleidochromic
-<br>
-This preview is missing the new buttons for marking an episode as completed or favourite.
+The TV panel shows the series, season number and name, episode number and title, description, thumbnail, watch progress, and neighboring episodes. At either end of the show, navigation wraps to the other end, with an explicit on-screen message. Specials come first as Season 0. Missing/virtual episodes are omitted; a one-episode show stays on that episode. Browsing leaves playback running.
 
-## 🔧 Installation
+TV mode follows Jellyfin's **Display → Layout → TV** setting (`layout-tv`), not screen size. The button is absent in TV mode. The browser handles both keyboard input and Jellyfin's remote command events; other dialogs retain their controls. Existing spoiler-blur settings apply to the TV panel.
 
-### Jellyfin Web Client (Server)
+## Client compatibility
 
-> [!NOTE]
-> It is highly recommended to have [file-transformation](https://github.com/IAmParadox27/jellyfin-plugin-file-transformation) at least v2.2.1.0 installed. It helps avoid permission issues while modifying index.html on any kind of installation!
-<details open>
-<summary> See instructions... </summary>
+This extends **Jellyfin Web** and clients using the server's web interface, including Jellyfin Media Player. It does not modify independently implemented native player screens such as the native Android TV player. The inherited server integration has targets for Jellyfin 10.10.7, 10.11.x, and 12.x; choose the package matching your server.
 
-1. Add the manifest `https://raw.githubusercontent.com/Namo2/InPlayerEpisodePreview/master/manifest.json` as a Jellyfin plugin repository to your server.
-2. Install the plugin `InPlayerEpisodePreview` from the repository.
-3. Restart the Jellyfin server.
-</details>
+## Install this build
 
-### Jellyfin Media Player (JMP) Desktop Client (Deprecated)
-<details>
-<summary> See instructions... </summary>
+1. Build a ZIP with the instructions below, or use the matching ZIP in `dist/` from this workspace.
+2. Stop Jellyfin and back up any existing InPlayerEpisodePreview plugin folder.
+3. Extract `Namo.Plugin.InPlayerEpisodePreview.dll` into a folder under Jellyfin's configured `plugins` directory. Replace the existing plugin DLL if already installed; do not keep two copies. This fork deliberately retains the original plugin ID and settings.
+4. Restart Jellyfin and refresh/reload the web client. Enable the TV layout on the client, start an episode, and press **Down**.
 
-**Deprecated with JMP Version [1.11.0](https://github.com/jellyfin/jellyfin-media-player/releases/tag/v1.11.0)**
+The original [File Transformation plugin](https://github.com/IAmParadox27/jellyfin-plugin-file-transformation) is recommended for injecting the web script without directly modifying `index.html`. The upstream injector remains in place. The inherited `manifest.json` points to **upstream releases**, not this fork. Installing from it will not install these TV changes. A separately hosted repository manifest is needed before distributing this fork through Jellyfin's plugin catalogue.
 
-Because the new JMP client is using the current web player from the server itself, it is no longer needed to make any changes to the client code directly.
+## Build and verify
 
-This is the recommended way to install the script on the desktop client.
-If you don't feel comfortable editing the nativeshell.js file yourself (step 3 to 6), you can download the full release instead, which includes the script already added to the nativeshell.js file.
-It is yet unclear if there could be potential issues, replacing the nativeshell.js file with the one from the release, so it is recommended to follow all steps below.
+Requires Node.js 22+, npm, a .NET SDK capable of building the selected target (net8.0, net9.0, or net10.0), and Python 3 for packaging.
 
-1. Download the latest release [JMP](https://github.com/Namo2/InPlayerEpisodePreview/releases/download/v1.1.0.0/inPlayerEpisodePreview-1.1.0.0-jmp.zip) or [JMP-full](https://github.com/Namo2/InPlayerEpisodePreview/releases/download/v1.1.0.0/inPlayerEpisodePreview-1.1.0.0-jmp-full.zip) (includes the script already added to the nativeshell.js file)
-2. Extract the zip file into your Jellyfin directory (e.g. C:\Program Files\Jellyfin\Jellyfin Media Player)
-3. Inside your Jellyfin directory follow the folder path "web-client\extension"
-4. Open the "nativeshell.js" file in a text editor.
-5. Inside the file find the section `const plugins = [];`. Add a new line at the start of the list and paste in `'inPlayerEpisodePreviewPlugin',`. The section should now look similar to this:
-```javascript
-const plugins = [
-    'inPlayerEpisodePreviewPlugin',
-    'mpvVideoPlayer',
-    'mpvAudioPlayer',
-    'jmpInputPlugin',
-    'jmpUpdatePlugin',
-    'jellyscrubPlugin',
-    'skipIntroPlugin'
-];
+```sh
+cd Namo.Plugin.InPlayerEpisodePreview
+npm ci
+npm run typecheck
+npm test
+npx playwright install chromium
+npm run test:browser
+cd ..
+
+# Defaults to Jellyfin 10.11.0; creates a single-DLL ZIP in dist/.
+bash scripts/package-plugin.sh 10.11.0
+# Other supported targets:
+bash scripts/package-plugin.sh 10.10.7
+bash scripts/package-plugin.sh 12.0.0
 ```
-6. Save the file and restart the JMP client.
-</details>
 
-## 💡 Troubleshooting
+`Web/InPlayerPreview.js` is the generated production bundle embedded in the DLL. Run `npm run build` after changing TypeScript or CSS. `npx webpack --mode development` produces a development bundle with a separate source map.
 
-### 1. The preview button isn't visible
-This is most likely related to wrong permissions for the `index.html` file.
+Tests cover episode pagination, ordering, season transitions, whole-show wrapping, remote and keyboard commands, playback errors, dialog/focus handling, asynchronous cancellation, and the desktop button. Browser tests run against a mocked Jellyfin API; a physical remote and a live server are still needed for device-specific validation.
 
-<details>
-<summary> See a list of possible solutions... </summary>
+## Try the UI locally
 
-#### 1.1 Avoid this issue by using the [file-transformation](https://github.com/IAmParadox27/jellyfin-plugin-file-transformation) plugin.
-
-#### 1.2 Change Ownership inside a docker container
-If you're running jellyfin in a docker container, you can change the ownership with thie following command
-(replace jellyfin with your containername, user and group with the user and group of your container):
+```sh
+cd Namo.Plugin.InPlayerEpisodePreview
+npm run build
+npm run demo
 ```
-docker exec -it --user root jellyfin chown user:group /jellyfin/jellyfin-web/index.html && docker restart jellyfin
-```
-You can run this as a cron job on system startup.
-(Thanks to [muisje](https://github.com/muisje) for helping with [this](https://github.com/Namo2/InPlayerEpisodePreview/issues/49#issue-2825745530) solution)
 
-#### 1.3 Change Ownership running on a Windows installation
-1. Navigate to: `C:\Program Files\Jellyfin\Server\jellyfin-web\`
-2. Right-click on `index.html` → `Properties` → `Security tab` → Click on `Edit`
-3. Select your user from the list and check the Write `permission` box.
-4. Restart both the server and client.
-   (Thanks to [xeuc](https://github.com/xeuc) for [this](https://github.com/Namo2/InPlayerEpisodePreview/issues/49#issuecomment-2746136069) solution)
+Open [the offline demo](http://127.0.0.1:4173/demo/index.html#/video), then press **Down**. Switch between TV and desktop using the controls at the top. The demo uses fictional episodes and local artwork; it does not connect to or control a Jellyfin server.
 
-If none of the above solutions work, please have a look at old issues. E.g. [here](https://github.com/Namo2/InPlayerEpisodePreview/issues/10) or [here](https://github.com/Namo2/InPlayerEpisodePreview/issues/49).
-</details>
+## Credits and license
 
-<br/>
-<br/>
-If you encounter any error which you can't solve yourself, feel free to open up an issue.
-<br/>Please keep in mind that any system is different which can lead to unexpected behaviour, so add as much information about it as possible.
-<br/>Jellyfin logs and console logs from the browser (prefixed as [InPlayerEpisodePreview]) are always useful.
-
-## Credits
-The plugin structure is based and inspired on the [Jellyscrub](https://github.com/nicknsy/jellyscrub) plugin by [NickNSY](https://github.com/nicknsy).
+Original plugin by [Namo2 and contributors](https://github.com/Namo2/InPlayerEpisodePreview). TV navigation and presentation are local modifications. The original [MIT license](LICENSE.md) and copyright notice are preserved.

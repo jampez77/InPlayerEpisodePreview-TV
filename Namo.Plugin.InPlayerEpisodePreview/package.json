@@ -1,11 +1,20 @@
 {
+  "scripts": {
+    "build": "webpack --mode production --devtool false",
+    "typecheck": "tsc --noEmit",
+    "test": "node --test tests/*.test.cjs",
+    "test:browser": "npm run build && playwright test",
+    "demo": "node demo/server.cjs"
+  },
   "browser": {
     "fs": false
   },
   "devDependencies": {
     "@jellyfin/sdk": "^0.13.0",
+    "@playwright/test": "1.63.0",
     "css-loader": "^7.1.5",
     "style-loader": "^4.0.0",
+    "typescript": "5.9.3",
     "webpack": "^5.108.4",
     "webpack-cli": "^7.2.1"
   },

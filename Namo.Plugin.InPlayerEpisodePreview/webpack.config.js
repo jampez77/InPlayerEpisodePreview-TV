@@ -1,12 +1,13 @@
 ﻿const path = require('path')
 
-module.exports = () => {
+module.exports = (_env, argv = {}) => {
     const projectRoot = __dirname
+    const mode = argv.mode || "production"
     
     return {
         context: projectRoot,
-        mode: "development",
-        devtool: "inline-source-map",
+        mode,
+        devtool: mode === "development" ? "source-map" : false,
         entry: "./Web/InPlayerPreview.ts",
         output: {
             path: path.resolve(projectRoot, "Web"),

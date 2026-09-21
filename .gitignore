@@ -277,6 +277,9 @@ BenchmarkDotNet.Artifacts
 
 # Ignore web artifacts from native builds
 node_modules/
+playwright-report/
+test-results/
+Namo.Plugin.InPlayerEpisodePreview/Web/*.js.map
 
 # Ignore JetBrains Rider run configs
 .run/

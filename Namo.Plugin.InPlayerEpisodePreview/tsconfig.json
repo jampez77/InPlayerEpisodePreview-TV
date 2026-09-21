@@ -6,6 +6,7 @@
         "sourceMap": true,
         "outDir": "./Web/",
     },
+    "include": ["Web/**/*.ts"],
     "exclude": [
         "node_modules"
     ]

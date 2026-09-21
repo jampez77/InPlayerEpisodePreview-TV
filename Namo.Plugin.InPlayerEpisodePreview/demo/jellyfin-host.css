@@ -1,0 +1,77 @@
+/* Offline equivalents of the shared styles normally provided by Jellyfin Web.
+   These are demo assets only; the installed plugin still uses the client's theme. */
+.dialogBackdrop { position: fixed; inset: 0; background: #0008; }
+.dialogContainer { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; }
+.dialog { background: #111f2a; border-radius: 16px; color: #edf4f8; }
+.actionSheetScroller { overflow: auto; }
+
+#previewPopup { position: fixed; inset: 0; z-index: 1000; font-size: 14px; line-height: 1.5; }
+#previewPopup .previewPopup {
+    left: auto; right: 24px; bottom: 24px;
+    width: min(620px, calc(100vw - 48px)); max-height: calc(100vh - 48px);
+    overflow: hidden; border: 1px solid #b7d8ec24;
+    box-shadow: 0 18px 70px #0009;
+}
+#previewPopup .flex, #previewPopup .listItem, #previewPopup .itemMiscInfo { display: flex; }
+#previewPopup button { font: inherit; color: inherit; background: none; border: 0; border-radius: 8px; }
+#previewPopup button:focus-visible { outline: 2px solid #80dfe8; outline-offset: 2px; }
+#previewPopup .previewPopupTitle {
+    align-items: center; gap: 12px; min-height: 72px; max-height: none;
+    padding: 16px 22px; border-bottom: 1px solid #ffffff13; cursor: pointer;
+}
+#previewPopup .previewPopupTitle:hover { background: #ffffff05; }
+#previewPopup .actionSheetTitle { margin: 0; font-size: 20px; font-weight: 650; line-height: 1.25; }
+#previewPopup .previewGroupWatchedCount { font-size: 12px; padding: 5px 9px; background: #ffffff09; opacity: 1; color: #9fb4c2; }
+#previewPopup .previewPopupScroller { padding: 8px; max-height: min(65vh, calc(100vh - 125px)); }
+#previewPopup .previewListItem { border-radius: 10px; padding: 8px 10px; cursor: pointer; }
+#previewPopup .previewListItem + .previewListItem { margin-top: 4px; }
+#previewPopup .previewListItem:hover { background: #ffffff06; }
+#previewPopup .previewListItem:has(.selectedListItem) { background: #ffffff08; }
+#previewPopup .previewItemContainer { align-items: center; gap: 12px; }
+#previewPopup .previewItemTitle { flex: 1; min-width: 0; padding: 8px 2px; gap: 12px; text-align: left; align-items: center; }
+#previewPopup .previewItemTitle > span { color: #8cabbc; min-width: 20px; font-variant-numeric: tabular-nums; }
+#previewPopup .listItemBody { flex: 1; min-width: 0; }
+#previewPopup .actionSheetItemText { font-weight: 600; overflow-wrap: anywhere; }
+#previewPopup .previewQuickActionContainer { flex: none; align-items: center; gap: 2px; }
+#previewPopup .paper-icon-button-light { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; padding: 7px; color: #8299a9; }
+#previewPopup .paper-icon-button-light:hover { color: #d8faff; background: #ffffff0c; }
+#previewPopup [data-played="true"], #previewPopup [data-isfavorite="true"] { color: #7bdfe8; }
+#previewPopup .previewListItemContent { min-height: 0; padding: 0 0 10px; }
+#previewPopup .itemMiscInfo { align-items: center; flex-wrap: wrap; gap: 6px 14px; font-size: 12px; color: #9fb4c2; margin-bottom: 12px; }
+#previewPopup .mediaInfoItem { display: inline-flex; align-items: center; gap: 4px; }
+#previewPopup .previewItemContentRow { gap: 14px; }
+#previewPopup .card { width: 30%; flex: 0 0 30%; min-width: 0; }
+#previewPopup .cardBox { border-radius: 8px; overflow: hidden; background: #213744; }
+#previewPopup .cardScalable { position: relative; }
+#previewPopup .cardPadder { height: 0; overflow: hidden; padding-bottom: 56.25%; }
+#previewPopup .cardImageContainer {
+    position: absolute; inset: 0; width: 100%; height: 100%; border-radius: 0;
+    background-size: cover; background-position: center;
+}
+#previewPopup .cardImageIcon { display: none; }
+#previewPopup .cardOverlayContainer { position: absolute; inset: 0; display: grid; place-items: center; background: #04121a40; }
+#previewPopup .cardOverlayButton { width: 40px; height: 40px; padding: 10px; border-radius: 50%; background: #0a1c26ce; color: white; }
+#previewPopup .cardOverlayButton:hover { background: #76e4ed; color: #071c29; }
+#previewPopup .previewItemDescription { margin: 0; color: #bdcdd8; font-size: 13px; line-height: 1.65; }
+#previewPopup .previewItemReadMoreButton { margin: 6px 0 0; color: #83dce6; }
+#previewPopup .itemProgressBar { position: absolute; bottom: 0; left: 0; right: 0; height: 4px; background: #0008; }
+#previewPopup .itemProgressBarForeground { height: 100%; background: #76e4ed; }
+
+/* Local glyph fallbacks: the demo deliberately does not load external icon fonts. */
+#previewPopup .material-icons { display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; font: 18px/1 ui-sans-serif, sans-serif; }
+#previewPopup .keyboard_backspace::before { content: "←"; }
+#previewPopup .check::before { content: "✓"; }
+#previewPopup .favorite::before { content: "♥"; }
+#previewPopup .star::before { content: "★"; }
+#previewPopup .play_arrow::before { content: "▶"; font-size: 15px; }
+
+@media (max-width: 540px) {
+    #previewPopup .previewPopup { right: 12px; bottom: 12px; width: calc(100vw - 24px); max-height: calc(100vh - 24px); }
+    #previewPopup .previewPopupTitle { gap: 8px; padding: 14px; }
+    #previewPopup .actionSheetTitle { font-size: 18px; }
+    #previewPopup .previewGroupWatchedCount { font-size: 11px; }
+    #previewPopup .previewListItem { padding: 8px; }
+    #previewPopup .previewItemContentRow { gap: 10px; }
+    #previewPopup .previewQuickActionContainer { gap: 0; }
+    #previewPopup .paper-icon-button-light { width: 30px; height: 30px; padding: 5px; }
+}
