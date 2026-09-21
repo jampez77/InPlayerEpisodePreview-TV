@@ -9,6 +9,30 @@
     "imageUrl": "https://raw.githubusercontent.com/jampez77/InPlayerEpisodePreview-TV/main/Images/tv-logo.png",
     "versions": [
       {
+        "version": "2.5.1.3",
+        "changelog": "## Changelog\n- During pre-rolls and trailers, preview the upcoming film or episode from the current device's Jellyfin playback queue, marked Up next.\n- Keep the TV panel hidden when upcoming details are unavailable, including playback-only intros and trailers without a queued feature.\n- Release preview focus, overlay state, pending requests, and held remote keys as the player exits so shared Back and Home controls can respond immediately.\n- Handle missing OSD IDs, equivalent GUID formats, and late playback reports without showing stale previews.\n- Update the README and public demo with pre-roll examples. Verified by 26 unit tests, 53 browser tests, and builds for Jellyfin 10.10.7, 10.11.x, and 12.x.\n\nThe exact reported Back/Home position shift remains unconfirmed on the affected client; this release fixes the reproduced focus and key interception issues.",
+        "targetAbi": "12.0.0",
+        "sourceUrl": "https://github.com/jampez77/InPlayerEpisodePreview-TV/releases/download/v2.5.1/InPlayerEpisodePreview_2.5.1.3-12.0.0.zip",
+        "checksum": "13c9f950fcbfd41e2b90f02846d28a8f",
+        "timestamp": "2026-09-21T21:03:47Z"
+      },
+      {
+        "version": "2.5.1.2",
+        "changelog": "## Changelog\n- During pre-rolls and trailers, preview the upcoming film or episode from the current device's Jellyfin playback queue, marked Up next.\n- Keep the TV panel hidden when upcoming details are unavailable, including playback-only intros and trailers without a queued feature.\n- Release preview focus, overlay state, pending requests, and held remote keys as the player exits so shared Back and Home controls can respond immediately.\n- Handle missing OSD IDs, equivalent GUID formats, and late playback reports without showing stale previews.\n- Update the README and public demo with pre-roll examples. Verified by 26 unit tests, 53 browser tests, and builds for Jellyfin 10.10.7, 10.11.x, and 12.x.\n\nThe exact reported Back/Home position shift remains unconfirmed on the affected client; this release fixes the reproduced focus and key interception issues.",
+        "targetAbi": "10.11.0",
+        "sourceUrl": "https://github.com/jampez77/InPlayerEpisodePreview-TV/releases/download/v2.5.1/InPlayerEpisodePreview_2.5.1.2-10.11.0.zip",
+        "checksum": "885f672b1f7d3e05eb9a4d094f9e9dfe",
+        "timestamp": "2026-09-21T21:03:47Z"
+      },
+      {
+        "version": "2.5.1.1",
+        "changelog": "## Changelog\n- During pre-rolls and trailers, preview the upcoming film or episode from the current device's Jellyfin playback queue, marked Up next.\n- Keep the TV panel hidden when upcoming details are unavailable, including playback-only intros and trailers without a queued feature.\n- Release preview focus, overlay state, pending requests, and held remote keys as the player exits so shared Back and Home controls can respond immediately.\n- Handle missing OSD IDs, equivalent GUID formats, and late playback reports without showing stale previews.\n- Update the README and public demo with pre-roll examples. Verified by 26 unit tests, 53 browser tests, and builds for Jellyfin 10.10.7, 10.11.x, and 12.x.\n\nThe exact reported Back/Home position shift remains unconfirmed on the affected client; this release fixes the reproduced focus and key interception issues.",
+        "targetAbi": "10.10.7",
+        "sourceUrl": "https://github.com/jampez77/InPlayerEpisodePreview-TV/releases/download/v2.5.1/InPlayerEpisodePreview_2.5.1.1-10.10.7.zip",
+        "checksum": "0b4a9f0bb47cbf98d447db35a7498897",
+        "timestamp": "2026-09-21T21:03:47Z"
+      },
+      {
         "version": "2.5.0.3",
         "changelog": "## Changelog\nAdd TV browsing for the current film and similar Jellyfin films, with resume support. Add Live TV channel browsing with current programme details and explicit channel selection. Preserve episode navigation and the original desktop preview. Add movie and Live TV demo modes, new screenshots, and a public interactive demo linked from the README.",
         "targetAbi": "12.0.0",
